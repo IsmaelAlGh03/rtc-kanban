@@ -23,6 +23,7 @@ export function registerSocketHandlers(io: Server) {
   });
 
   io.on('connection', (socket: Socket) => {
+    socket.join(socket.data.username as string);
     console.log(`Client connected: ${socket.id}`);
 
     socket.on('board:join', async (boardId: string) => {

@@ -30,6 +30,7 @@ export interface IBoard {
   color?: string;
   owner: string;
   members: string[];
+  pendingInvites: string[];
   inviteToken?: string;
   columns: IColumn[];
   createdAt: Date;

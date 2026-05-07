@@ -42,6 +42,7 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
   const [deleting, setDeleting] = useState(false);
 
   const [members, setMembers] = useState<string[]>(board.members);
+  const [pendingInvites, setPendingInvites] = useState<string[]>(board.pendingInvites ?? []);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [inviteLink, setInviteLink] = useState(
@@ -60,7 +61,7 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
       });
       if (res.ok) {
         const all: string[] = await res.json();
-        setSearchResults(all.filter(u => !members.includes(u) && u !== username));
+        setSearchResults(all.filter(u => !members.includes(u)));
       }
     }, 250);
   }, [searchQuery, members, username]);
@@ -72,9 +73,7 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
       body: JSON.stringify({ username: target }),
     });
     if (res.ok) {
-      const updated = [...members, target];
-      setMembers(updated);
-      onMembersChange(updated);
+      setPendingInvites(prev => [...prev, target]);
       setSearchQuery('');
       setSearchResults([]);
     }
@@ -203,10 +202,13 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
                   {searchResults.map(u => (
                     <button
                       key={u}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                      onClick={() => addMember(u)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors flex items-center justify-between"
+                      onClick={() => !pendingInvites.includes(u) && addMember(u)}
                     >
-                      {u}
+                      <span>{u}</span>
+                      {pendingInvites.includes(u) && (
+                        <span className="text-xs text-amber-500 font-semibold">Pending</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -225,6 +227,19 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
                     >
                       ×
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pending invites */}
+            {pendingInvites.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Pending invites</p>
+                {pendingInvites.map(u => (
+                  <div key={u} className="flex items-center justify-between px-3 py-1.5 bg-amber-50 rounded-lg">
+                    <span className="text-sm text-gray-700">{u}</span>
+                    <span className="text-xs text-amber-500 font-semibold">Pending</span>
                   </div>
                 ))}
               </div>
