@@ -25,9 +25,19 @@ export function registerSocketHandlers(io: Server) {
   io.on('connection', (socket: Socket) => {
     console.log(`Client connected: ${socket.id}`);
 
-    socket.on('board:join', (boardId: string) => {
-      socket.join(boardId);
-      console.log(`${socket.id} joined board ${boardId}`);
+    socket.on('board:join', async (boardId: string) => {
+      try {
+        const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+        if (!board) { socket.emit('board:error', 'Board not found'); return; }
+        const username = socket.data.username as string;
+        if (board.owner !== username && !board.members.includes(username)) {
+          socket.emit('board:error', 'Access denied');
+          return;
+        }
+        socket.join(boardId);
+      } catch {
+        socket.emit('board:error', 'Failed to join board');
+      }
     });
 
     socket.on(

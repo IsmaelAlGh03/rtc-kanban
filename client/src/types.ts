@@ -28,6 +28,9 @@ export interface IBoard {
   title: string;
   description?: string;
   color?: string;
+  owner: string;
+  members: string[];
+  inviteToken?: string;
   columns: IColumn[];
   createdAt: string;
   updatedAt: string;
