@@ -26,6 +26,8 @@ export interface IColumn {
 export interface IBoard {
   _id: string;
   title: string;
+  description?: string;
+  color?: string;
   columns: IColumn[];
   createdAt: string;
   updatedAt: string;
