@@ -1,6 +1,6 @@
 # RTC Kanban
 
-A real-time collaborative Kanban board where changes made by any user — moving cards, adding columns, posting comments — are instantly reflected for everyone in the same board session.
+A real-time Kanban board built to put my experience with WebSockets and live data sync to use in a full-stack project. Move a card, add a column, drop a comment — everyone in the same board sees it instantly, no refresh needed.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
@@ -9,18 +9,18 @@ A real-time collaborative Kanban board where changes made by any user — moving
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
 
-## Features
+## What it does
 
-- **Real-time sync** — board state propagates to all connected clients via WebSocket events
-- **Authentication** — JWT-based auth with bcrypt password hashing; login by username or email
-- **Board management** — create and delete boards; each board is isolated to its own Socket.io room
+- **Real-time updates** — any change is pushed to all connected users immediately via Socket.io
+- **Auth** — register/login with JWT tokens and bcrypt-hashed passwords; you can use your username or email to log in
+- **Boards** — create and delete boards; each one runs in its own Socket.io room
 - **Columns & cards** — add, move, and delete cards across columns; add and delete columns
-- **Card metadata** — per-card assignee, urgency level, and comment thread
-- **Ephemeral chat** — live in-board chat that persists for the session
+- **Card details** — assign cards to people, set an urgency level, and leave comments
+- **Live chat** — a simple chat that's active while you're in the board
 
-## How Real-Time Works
+## How the real-time part works
 
-Clients emit Socket.io events (`card:move`, `card:add`, `column:add`, etc.) to the server. The server applies the mutation directly to the MongoDB document using `$set` on the full `columns` array, then broadcasts a `board:updated` event carrying the complete updated board to every socket in the room. Clients replace their local state with the received document — there is no client-side merging or conflict resolution.
+When an action is performed (moving a card, adding a column, etc.), the client sends a Socket.io event to the server. The server updates the board in MongoDB, then broadcasts the full updated board back to everyone in the room. No merging on the client side — everyone just gets the latest version.
 
 ```
 Client A                  Server                  Client B
