@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { getDB } from '../db';
 import { IBoard } from '../models/Board';
 import { AuthRequest } from '../middleware/auth';
+import { createNotification } from '../services/notifications';
 
 const router = Router();
 
@@ -69,6 +70,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       ...(req.body.color && { color: req.body.color }),
       owner: username,
       members: [],
+      pendingInvites: [],
       columns: [
         { _id: new ObjectId().toString(), title: 'To Do', order: 0, cards: [] },
         { _id: new ObjectId().toString(), title: 'In Progress', order: 1, cards: [] },
@@ -148,9 +150,19 @@ router.patch('/:id/members', async (req: AuthRequest, res: Response) => {
 
     const actualUsername = user.username as string;
     if (board.members.includes(actualUsername)) return res.status(409).json({ error: 'User already has access' });
+    if ((board.pendingInvites ?? []).includes(actualUsername)) return res.status(409).json({ error: 'Invite already sent' });
 
-    await boards().updateOne({ _id: board._id as any }, { $addToSet: { members: actualUsername } });
-    res.json({ username: actualUsername });
+    await boards().updateOne({ _id: board._id as any }, { $addToSet: { pendingInvites: actualUsername } });
+
+    await createNotification({
+      userId: actualUsername,
+      type: 'invite',
+      boardId: board._id!.toString(),
+      boardTitle: board.title,
+      fromUsername: req.username!,
+    });
+
+    res.json({ username: actualUsername, pending: true });
   } catch {
     res.status(400).json({ error: 'Invalid board ID' });
   }

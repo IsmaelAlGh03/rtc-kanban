@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { IBoard } from './types';
 import Board from './components/Board';
 import BoardModal from './components/BoardModal';
+import NotificationTray from './components/NotificationTray';
 import { resetSocket } from './socket';
 
 const API = 'http://localhost:4000/api';
@@ -293,6 +294,7 @@ export default function App() {
           <span className="text-sm text-gray-500">
             Logged in as <strong className="text-gray-700">{username}</strong>
           </span>
+          <NotificationTray onBoardsChange={fetchBoards} />
           <button
             onClick={logout}
             className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors bg-white"

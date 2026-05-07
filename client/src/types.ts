@@ -30,10 +30,22 @@ export interface IBoard {
   color?: string;
   owner: string;
   members: string[];
+  pendingInvites: string[];
   inviteToken?: string;
   columns: IColumn[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface INotification {
+  _id: string;
+  userId: string;
+  type: 'invite' | 'invite_accepted' | 'invite_rejected';
+  boardId: string;
+  boardTitle: string;
+  fromUsername: string;
+  read: boolean;
+  createdAt: string;
 }
 
 export interface ChatMessage {
