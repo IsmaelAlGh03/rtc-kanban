@@ -1,0 +1,38 @@
+export interface IComment {
+  _id: string;
+  username: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface ICard {
+  _id: string;
+  title: string;
+  description?: string;
+  order: number;
+  addedBy: string;
+  assignedTo?: string;
+  urgency: 'low' | 'medium' | 'high';
+  comments: IComment[];
+}
+
+export interface IColumn {
+  _id: string;
+  title: string;
+  order: number;
+  cards: ICard[];
+}
+
+export interface IBoard {
+  _id: string;
+  title: string;
+  columns: IColumn[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  username: string;
+  text: string;
+  timestamp: string;
+}

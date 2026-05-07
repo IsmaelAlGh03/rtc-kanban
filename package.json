@@ -1,0 +1,13 @@
+{
+  "name": "rtc-kanban",
+  "version": "1.0.0",
+  "description": "Real-time Kanban board with Socket.io",
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
