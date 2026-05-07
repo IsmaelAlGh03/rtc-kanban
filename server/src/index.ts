@@ -1,6 +1,5 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './db';
 import { registerSocketHandlers } from './socket/handlers';
@@ -16,8 +15,6 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   },
 });
-
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 
 registerSocketHandlers(io);
 
