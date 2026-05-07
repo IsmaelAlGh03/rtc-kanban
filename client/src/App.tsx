@@ -240,10 +240,55 @@ export default function App() {
   }
 
   // ── Board list ───────────────────────────────────────────
+  const myBoards = boards.filter(b => b.owner === username);
+  const sharedBoards = boards.filter(b => b.owner !== username);
+
+  function renderBoardCard(b: (typeof boards)[0]) {
+    const bg = b.color || null;
+    const light = bg ? isColorLight(bg) : true;
+    const textColor = bg ? (light ? 'text-gray-900' : 'text-white') : 'text-gray-800';
+    const iconColor = bg ? (light ? 'text-gray-700 hover:text-gray-900' : 'text-white/70 hover:text-white') : 'text-gray-400 hover:text-gray-700';
+    const isOwned = b.owner === username;
+
+    return (
+      <div
+        key={b._id}
+        className={`relative group rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer ${!isOwned ? 'border-2 border-dashed border-gray-300' : ''}`}
+        style={{ backgroundColor: bg ?? '#ffffff' }}
+        onClick={() => setCurrentBoard(b)}
+      >
+        <p className={`font-semibold ${textColor}`}>{b.title}</p>
+        {b.description && (
+          <p className={`text-xs mt-1 line-clamp-2 ${bg ? (light ? 'text-gray-600' : 'text-white/70') : 'text-gray-500'}`}>
+            {b.description}
+          </p>
+        )}
+        {!isOwned && (
+          <p className={`text-[11px] mt-2 ${bg ? (light ? 'text-gray-500' : 'text-white/60') : 'text-gray-400'}`}>
+            by {b.owner}
+          </p>
+        )}
+        {isOwned && (
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              className={`p-1 rounded ${iconColor} transition-colors`}
+              onClick={e => { e.stopPropagation(); setEditingBoard(b); }}
+              title="Edit board"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16.414H8v-2a2 2 0 01.586-1.414z" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Your Boards</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Boards</h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500">
             Logged in as <strong className="text-gray-700">{username}</strong>
@@ -257,47 +302,33 @@ export default function App() {
         </div>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
-        {boards.map(b => {
-          const bg = b.color || null;
-          const light = bg ? isColorLight(bg) : true;
-          const textColor = bg ? (light ? 'text-gray-900' : 'text-white') : 'text-gray-800';
-          const iconColor = bg ? (light ? 'text-gray-700 hover:text-gray-900' : 'text-white/70 hover:text-white') : 'text-gray-400 hover:text-gray-700';
-          return (
-            <div
-              key={b._id}
-              className="relative group rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
-              style={{ backgroundColor: bg ?? '#ffffff' }}
-              onClick={() => setCurrentBoard(b)}
-            >
-              <p className={`font-semibold ${textColor}`}>{b.title}</p>
-              {b.description && (
-                <p className={`text-xs mt-1 line-clamp-2 ${bg ? (light ? 'text-gray-600' : 'text-white/70') : 'text-gray-500'}`}>
-                  {b.description}
-                </p>
-              )}
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  className={`p-1 rounded ${iconColor} transition-colors`}
-                  onClick={e => { e.stopPropagation(); setEditingBoard(b); }}
-                  title="Edit board"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16.414H8v-2a2 2 0 01.586-1.414z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">My Boards</h2>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+          {myBoards.map(renderBoardCard)}
+        </div>
+      </section>
+
+      {sharedBoards.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Shared with me</h2>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+            {sharedBoards.map(renderBoardCard)}
+          </div>
+        </section>
+      )}
 
       {editingBoard && (
         <BoardModal
           board={editingBoard}
+          username={username}
           onClose={() => setEditingBoard(null)}
           onSave={updates => saveBoard(editingBoard._id, updates)}
           onDelete={() => deleteBoard(editingBoard._id)}
+          onMembersChange={members => {
+            setBoards(prev => prev.map(b => b._id === editingBoard._id ? { ...b, members } : b));
+            setEditingBoard(prev => prev ? { ...prev, members } : prev);
+          }}
         />
       )}
 
