@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
 import { IBoard } from './types';
 import Board from './components/Board';
+import BoardModal from './components/BoardModal';
 import { resetSocket } from './socket';
 
 const API = 'http://localhost:4000/api';
+
+function isColorLight(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 155;
+}
 
 function authHeaders() {
   return {
@@ -17,6 +25,7 @@ export default function App() {
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [currentBoard, setCurrentBoard] = useState<IBoard | null>(null);
   const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [editingBoard, setEditingBoard] = useState<IBoard | null>(null);
 
   // Auth form state
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -85,6 +94,23 @@ export default function App() {
     const res = await fetch(`${API}/boards`, { headers: authHeaders() });
     if (res.status === 401) { logout(); return; }
     setBoards(await res.json());
+  }
+
+  async function saveBoard(id: string, updates: Pick<IBoard, 'title' | 'description' | 'color'>) {
+    const res = await fetch(`${API}/boards/${id}`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(updates),
+    });
+    if (res.status === 401) { logout(); return; }
+    setBoards(prev => prev.map(b => b._id === id ? { ...b, ...updates } : b));
+  }
+
+  async function deleteBoard(id: string) {
+    const res = await fetch(`${API}/boards/${id}`, { method: 'DELETE', headers: authHeaders() });
+    if (res.status === 401) { logout(); return; }
+    setBoards(prev => prev.filter(b => b._id !== id));
+    setEditingBoard(null);
   }
 
   async function createBoard() {
@@ -232,16 +258,48 @@ export default function App() {
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
-        {boards.map(b => (
-          <div
-            key={b._id}
-            className="bg-white rounded-xl p-6 font-semibold text-gray-800 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-            onClick={() => setCurrentBoard(b)}
-          >
-            {b.title}
-          </div>
-        ))}
+        {boards.map(b => {
+          const bg = b.color || null;
+          const light = bg ? isColorLight(bg) : true;
+          const textColor = bg ? (light ? 'text-gray-900' : 'text-white') : 'text-gray-800';
+          const iconColor = bg ? (light ? 'text-gray-700 hover:text-gray-900' : 'text-white/70 hover:text-white') : 'text-gray-400 hover:text-gray-700';
+          return (
+            <div
+              key={b._id}
+              className="relative group rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
+              style={{ backgroundColor: bg ?? '#ffffff' }}
+              onClick={() => setCurrentBoard(b)}
+            >
+              <p className={`font-semibold ${textColor}`}>{b.title}</p>
+              {b.description && (
+                <p className={`text-xs mt-1 line-clamp-2 ${bg ? (light ? 'text-gray-600' : 'text-white/70') : 'text-gray-500'}`}>
+                  {b.description}
+                </p>
+              )}
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  className={`p-1 rounded ${iconColor} transition-colors`}
+                  onClick={e => { e.stopPropagation(); setEditingBoard(b); }}
+                  title="Edit board"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16.414H8v-2a2 2 0 01.586-1.414z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {editingBoard && (
+        <BoardModal
+          board={editingBoard}
+          onClose={() => setEditingBoard(null)}
+          onSave={updates => saveBoard(editingBoard._id, updates)}
+          onDelete={() => deleteBoard(editingBoard._id)}
+        />
+      )}
 
       <div className="flex gap-2 max-w-sm">
         <input

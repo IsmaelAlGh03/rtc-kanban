@@ -31,6 +31,8 @@ router.post('/', async (req: Request, res: Response) => {
     const now = new Date();
     const board: IBoard = {
       title: req.body.title || 'My Board',
+      ...(req.body.description && { description: req.body.description }),
+      ...(req.body.color && { color: req.body.color }),
       columns: [
         { _id: new ObjectId().toString(), title: 'To Do', order: 0, cards: [] },
         { _id: new ObjectId().toString(), title: 'In Progress', order: 1, cards: [] },
@@ -60,15 +62,18 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
 router.patch('/:id', async (req: Request, res: Response) => {
   try {
-    const { title } = req.body;
+    const { title, description, color } = req.body;
     if (!title || typeof title !== 'string') {
       return res.status(400).json({ error: 'title is required' });
     }
+    const update: Record<string, unknown> = { title: title.trim(), updatedAt: new Date() };
+    if (typeof description === 'string') update.description = description.trim();
+    if (typeof color === 'string') update.color = color;
     const result = await getDB()
       .collection('boards')
       .updateOne(
         { _id: new ObjectId(req.params.id as string) as any },
-        { $set: { title: title.trim(), updatedAt: new Date() } }
+        { $set: update }
       );
     if (result.matchedCount === 0) return res.status(404).json({ error: 'Board not found' });
     res.json({ message: 'Board updated' });
