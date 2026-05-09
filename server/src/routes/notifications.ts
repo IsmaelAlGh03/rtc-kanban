@@ -54,7 +54,7 @@ router.post('/:id/accept', async (req: AuthRequest, res: Response) => {
       }
     );
 
-    await notifs().updateOne({ _id: notif._id as any }, { $set: { read: true } });
+    await notifs().updateOne({ _id: notif._id as any }, { $set: { read: true, type: 'invite_accepted' } });
 
     await createNotification({
       userId: notif.fromUsername,
@@ -82,7 +82,7 @@ router.post('/:id/reject', async (req: AuthRequest, res: Response) => {
       { $pull: { pendingInvites: req.username! } }
     );
 
-    await notifs().updateOne({ _id: notif._id as any }, { $set: { read: true } });
+    await notifs().updateOne({ _id: notif._id as any }, { $set: { read: true, type: 'invite_rejected' } });
 
     await createNotification({
       userId: notif.fromUsername,
