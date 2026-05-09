@@ -18,7 +18,6 @@ interface Props {
 export default function NotificationTray({ onBoardsChange }: Props) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<INotification[]>([]);
-  const [actedOn, setActedOn] = useState<Set<string>>(new Set());
   const ref = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -61,8 +60,7 @@ export default function NotificationTray({ onBoardsChange }: Props) {
       headers: authHeaders(),
     });
     if (res.ok) {
-      setActedOn(prev => new Set(prev).add(notif._id));
-      setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, read: true, type: 'invite_accepted' } : n));
       onBoardsChange();
     }
   }
@@ -73,8 +71,7 @@ export default function NotificationTray({ onBoardsChange }: Props) {
       headers: authHeaders(),
     });
     if (res.ok) {
-      setActedOn(prev => new Set(prev).add(notif._id));
-      setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, read: true, type: 'invite_rejected' } : n));
     }
   }
 
@@ -117,7 +114,7 @@ export default function NotificationTray({ onBoardsChange }: Props) {
                   <p className="text-[11px] text-gray-400 mt-1">
                     {new Date(n.createdAt).toLocaleDateString()}
                   </p>
-                  {n.type === 'invite' && !actedOn.has(n._id) && (
+                  {n.type === 'invite' && (
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => accept(n)}
