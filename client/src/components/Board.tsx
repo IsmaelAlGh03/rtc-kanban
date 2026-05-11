@@ -92,8 +92,8 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
     getSocket().emit('card:update', { boardId: localBoard._id, columnId, cardId, ...fields });
   }
 
-  function addComment(columnId: string, cardId: string, text: string) {
-    getSocket().emit('card:comment:add', { boardId: localBoard._id, columnId, cardId, text });
+  function addComment(columnId: string, cardId: string, text: string, mentions: string[]) {
+    getSocket().emit('card:comment:add', { boardId: localBoard._id, columnId, cardId, text, mentions });
   }
 
   function sendMessage(text: string) {
@@ -296,7 +296,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
           members={[localBoard.owner, ...localBoard.members]}
           onClose={closeModal}
           onUpdate={(fields) => updateCard(selectedColId, selectedCard._id, fields)}
-          onAddComment={(text) => addComment(selectedColId, selectedCard._id, text)}
+          onAddComment={(text, mentions) => addComment(selectedColId, selectedCard._id, text, mentions)}
         />
       )}
     </div>

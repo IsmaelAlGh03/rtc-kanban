@@ -8,7 +8,7 @@ interface Props {
   members: string[];
   onClose: () => void;
   onUpdate: (fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high' }) => void;
-  onAddComment: (text: string) => void;
+  onAddComment: (text: string, mentions: string[]) => void;
 }
 
 const URGENCY_CONFIG = {
@@ -21,6 +21,22 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
   const [assignedInput, setAssignedInput] = useState(card.assignedTo ?? '');
   const [focused, setFocused] = useState(false);
   const [commentInput, setCommentInput] = useState('');
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+
+  const mentionSuggestions = mentionQuery !== null
+    ? members.filter(m => m !== username && m.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 5)
+    : [];
+
+  function getActiveMentionQuery(text: string, cursorPos: number): string | null {
+    const before = text.slice(0, cursorPos);
+    const match = before.match(/(?:^|\s)@(\w*)$/);
+    return match ? match[1] : null;
+  }
+
+  function extractMentions(text: string): string[] {
+    const matches = [...text.matchAll(/\B@(\w+)/g)].map(m => m[1]);
+    return [...new Set(matches.filter(m => members.includes(m)))];
+  }
   const commentsBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,6 +62,18 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
     }
   }
 
+  function renderCommentText(text: string, mentions: string[]) {
+    if (!mentions.length) return text;
+    const parts = text.split(/(\B@\w+)/g);
+    return parts.map((part, i) => {
+      const match = part.match(/^\B@(\w+)$/);
+      if (match && mentions.includes(match[1])) {
+        return <span key={i} className="text-blue-600 font-semibold">{part}</span>;
+      }
+      return part;
+    });
+  }
+
   function selectSuggestion(member: string) {
     setAssignedInput(member);
     setFocused(false);
@@ -56,8 +84,11 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
 
   function submitComment() {
     if (!commentInput.trim()) return;
-    onAddComment(commentInput.trim());
+    const text = commentInput.trim();
+    const mentions = extractMentions(text);
+    onAddComment(text, mentions);
     setCommentInput('');
+    setMentionQuery(null);
   }
 
   return (
@@ -171,26 +202,62 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
                     })}
                   </span>
                 </div>
-                <p className="text-sm leading-snug break-words">{c.text}</p>
+                <p className="text-sm leading-snug break-words">{renderCommentText(c.text, c.mentions ?? [])}</p>
               </div>
             ))}
             <div ref={commentsBottomRef} />
           </div>
 
-          <div className="flex gap-2 shrink-0">
-            <input
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              value={commentInput}
-              onChange={e => setCommentInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && submitComment()}
-              placeholder="Add a comment..."
-            />
-            <button
-              className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-              onClick={submitComment}
-            >
-              Post
-            </button>
+          <div className="flex flex-col gap-2 shrink-0">
+            <div className="relative">
+              {mentionSuggestions.length > 0 && (
+                <ul className="absolute z-10 left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                  {mentionSuggestions.map(member => (
+                    <li
+                      key={member}
+                      className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => {
+                        const input = document.getElementById('comment-input') as HTMLInputElement;
+                        const cursor = input?.selectionStart ?? commentInput.length;
+                        const before = commentInput.slice(0, cursor).replace(/(?:^|\s)@(\w*)$/, (match) => {
+                          const space = match.startsWith(' ') ? ' ' : '';
+                          return `${space}@${member} `;
+                        });
+                        const after = commentInput.slice(cursor);
+                        setCommentInput(before + after);
+                        setMentionQuery(null);
+                      }}
+                    >
+                      @{member}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <input
+                id="comment-input"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                value={commentInput}
+                onChange={e => {
+                  setCommentInput(e.target.value);
+                  setMentionQuery(getActiveMentionQuery(e.target.value, e.target.selectionStart ?? e.target.value.length));
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') { setMentionQuery(null); return; }
+                  if (e.key === 'Enter') { setMentionQuery(null); submitComment(); }
+                }}
+                onBlur={() => setMentionQuery(null)}
+                placeholder="Add a comment... (use @ to mention)"
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                onClick={submitComment}
+              >
+                Post
+              </button>
+            </div>
           </div>
         </div>
       </div>

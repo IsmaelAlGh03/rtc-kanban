@@ -80,6 +80,7 @@ export default function NotificationTray({ onBoardsChange, onNavigateToCard }: P
     if (n.type === 'invite') return <><strong>{n.fromUsername}</strong> invited you to <strong>{n.boardTitle}</strong></>;
     if (n.type === 'invite_accepted') return <><strong>{n.fromUsername}</strong> accepted your invite to <strong>{n.boardTitle}</strong></>;
     if (n.type === 'assigned') return <><strong>{n.fromUsername}</strong> assigned you to <strong>{n.cardTitle}</strong> in <strong>{n.boardTitle}</strong></>;
+    if (n.type === 'mentioned') return <><strong>{n.fromUsername}</strong> mentioned you in <strong>{n.cardTitle}</strong> in <strong>{n.boardTitle}</strong></>;
     return <><strong>{n.fromUsername}</strong> declined your invite to <strong>{n.boardTitle}</strong></>;
   }
 
@@ -120,8 +121,8 @@ export default function NotificationTray({ onBoardsChange, onNavigateToCard }: P
               notifications.map(n => (
                 <div
                   key={n._id}
-                  className={`px-4 py-3 border-b border-gray-50 last:border-0 ${!n.read ? 'bg-blue-50/50' : ''} ${n.type === 'assigned' ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
-                  onClick={n.type === 'assigned' ? () => handleAssignedClick(n) : undefined}
+                  className={`px-4 py-3 border-b border-gray-50 last:border-0 ${!n.read ? 'bg-blue-50/50' : ''} ${(n.type === 'assigned' || n.type === 'mentioned') ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
+                  onClick={(n.type === 'assigned' || n.type === 'mentioned') ? () => handleAssignedClick(n) : undefined}
                 >
                   <p className="text-sm text-gray-700 leading-snug">{label(n)}</p>
                   <p className="text-[11px] text-gray-400 mt-1">

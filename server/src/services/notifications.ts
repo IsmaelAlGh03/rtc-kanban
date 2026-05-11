@@ -5,7 +5,7 @@ import { getDB } from '../db';
 export interface INotification {
   _id?: string;
   userId: string;
-  type: 'invite' | 'invite_accepted' | 'invite_rejected' | 'assigned';
+  type: 'invite' | 'invite_accepted' | 'invite_rejected' | 'assigned' | 'mentioned';
   boardId: string;
   boardTitle: string;
   fromUsername: string;
