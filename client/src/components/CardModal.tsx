@@ -5,6 +5,7 @@ interface Props {
   card: ICard;
   columnId: string;
   username: string;
+  members: string[];
   onClose: () => void;
   onUpdate: (fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high' }) => void;
   onAddComment: (text: string) => void;
@@ -16,8 +17,9 @@ const URGENCY_CONFIG = {
   high:   { label: 'High',   bg: 'bg-red-100',    text: 'text-red-800',    border: 'border-red-500',    activeBg: 'bg-red-100'    },
 } as const;
 
-export default function CardModal({ card, username, onClose, onUpdate, onAddComment }: Props) {
+export default function CardModal({ card, username, members, onClose, onUpdate, onAddComment }: Props) {
   const [assignedInput, setAssignedInput] = useState(card.assignedTo ?? '');
+  const [focused, setFocused] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const commentsBottomRef = useRef<HTMLDivElement>(null);
 
@@ -29,10 +31,26 @@ export default function CardModal({ card, username, onClose, onUpdate, onAddComm
     commentsBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [card.comments.length]);
 
+  const suggestions = focused && assignedInput.trim()
+    ? members.filter(m => m.toLowerCase().includes(assignedInput.trim().toLowerCase())).slice(0, 5)
+    : [];
+
   function saveAssignedTo() {
     const val = assignedInput.trim();
+    if (val !== '' && !members.includes(val)) {
+      setAssignedInput(card.assignedTo ?? '');
+      return;
+    }
     if (val !== (card.assignedTo ?? '')) {
       onUpdate({ assignedTo: val });
+    }
+  }
+
+  function selectSuggestion(member: string) {
+    setAssignedInput(member);
+    setFocused(false);
+    if (member !== (card.assignedTo ?? '')) {
+      onUpdate({ assignedTo: member });
     }
   }
 
@@ -71,14 +89,31 @@ export default function CardModal({ card, username, onClose, onUpdate, onAddComm
 
           <div className="flex items-center gap-4">
             <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 w-24 shrink-0">Assigned to</span>
-            <input
-              className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              value={assignedInput}
-              onChange={e => setAssignedInput(e.target.value)}
-              onBlur={saveAssignedTo}
-              onKeyDown={e => e.key === 'Enter' && saveAssignedTo()}
-              placeholder="Unassigned"
-            />
+            <div className="relative flex-1">
+              <input
+                className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                value={assignedInput}
+                onChange={e => { setAssignedInput(e.target.value); setFocused(true); }}
+                onFocus={() => setFocused(true)}
+                onBlur={() => { setFocused(false); saveAssignedTo(); }}
+                onKeyDown={e => { if (e.key === 'Enter') { setFocused(false); saveAssignedTo(); } }}
+                placeholder="Unassigned"
+              />
+              {suggestions.length > 0 && (
+                <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                  {suggestions.map(member => (
+                    <li
+                      key={member}
+                      className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => selectSuggestion(member)}
+                    >
+                      {member}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

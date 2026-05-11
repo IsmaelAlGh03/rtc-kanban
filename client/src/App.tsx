@@ -27,6 +27,7 @@ export default function App() {
   const [currentBoard, setCurrentBoard] = useState<IBoard | null>(null);
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [editingBoard, setEditingBoard] = useState<IBoard | null>(null);
+  const [pendingCard, setPendingCard] = useState<{ columnId: string; cardId: string } | null>(null);
 
   // Auth form state
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -229,13 +230,23 @@ export default function App() {
     );
   }
 
+  async function navigateToCard(boardId: string, columnId: string, cardId: string) {
+    const res = await fetch(`${API}/boards/${boardId}`, { headers: authHeaders() });
+    if (!res.ok) return;
+    const freshBoard: IBoard = await res.json();
+    setBoards(prev => prev.map(b => b._id === boardId ? freshBoard : b));
+    setPendingCard({ columnId, cardId });
+    setCurrentBoard(freshBoard);
+  }
+
   // ── Board view ───────────────────────────────────────────
   if (currentBoard) {
     return (
       <Board
         board={currentBoard}
         username={username}
-        onLeave={() => setCurrentBoard(null)}
+        initialCard={pendingCard ?? undefined}
+        onLeave={() => { setCurrentBoard(null); setPendingCard(null); }}
       />
     );
   }
@@ -256,7 +267,7 @@ export default function App() {
         key={b._id}
         className={`relative group rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer ${!isOwned ? 'border-2 border-dashed border-gray-300' : ''}`}
         style={{ backgroundColor: bg ?? '#ffffff' }}
-        onClick={() => setCurrentBoard(b)}
+        onClick={() => { setPendingCard(null); setCurrentBoard(b); }}
       >
         <p className={`font-semibold ${textColor}`}>{b.title}</p>
         {b.description && (
@@ -294,7 +305,7 @@ export default function App() {
           <span className="text-sm text-gray-500">
             Logged in as <strong className="text-gray-700">{username}</strong>
           </span>
-          <NotificationTray onBoardsChange={fetchBoards} />
+          <NotificationTray onBoardsChange={fetchBoards} onNavigateToCard={navigateToCard} />
           <button
             onClick={logout}
             className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors bg-white"

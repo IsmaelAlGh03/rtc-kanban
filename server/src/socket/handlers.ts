@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { getDB } from '../db';
 import { IBoard } from '../models/Board';
 import { JWT_SECRET } from '../config';
+import { createNotification } from '../services/notifications';
 
 function boards() {
   return getDB().collection<IBoard>('boards');
@@ -215,6 +216,7 @@ export function registerSocketHandlers(io: Server) {
           const card = col.cards.find((c) => c._id === cardId);
           if (!card) return;
 
+          const previousAssignee = card.assignedTo;
           if (title !== undefined) card.title = title;
           if (description !== undefined) card.description = description;
           if (assignedTo !== undefined) card.assignedTo = assignedTo;
@@ -226,6 +228,25 @@ export function registerSocketHandlers(io: Server) {
             { $set: { columns: board.columns, updatedAt: now } }
           );
           board.updatedAt = now;
+
+          const assigner = socket.data.username as string;
+          if (
+            assignedTo !== undefined &&
+            assignedTo !== '' &&
+            assignedTo !== previousAssignee &&
+            assignedTo !== assigner
+          ) {
+            createNotification({
+              userId: assignedTo,
+              type: 'assigned',
+              boardId,
+              boardTitle: board.title,
+              cardId,
+              cardTitle: card.title,
+              columnId,
+              fromUsername: assigner,
+            }).catch(err => console.error('assignment notification error', err));
+          }
 
           io.to(boardId).emit('board:updated', board);
         } catch (err) {
