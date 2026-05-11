@@ -3,6 +3,7 @@ export interface IComment {
   username: string;
   text: string;
   timestamp: string;
+  mentions: string[];
 }
 
 export interface ICard {
@@ -40,7 +41,7 @@ export interface IBoard {
 export interface INotification {
   _id: string;
   userId: string;
-  type: 'invite' | 'invite_accepted' | 'invite_rejected' | 'assigned';
+  type: 'invite' | 'invite_accepted' | 'invite_rejected' | 'assigned' | 'mentioned';
   boardId: string;
   boardTitle: string;
   fromUsername: string;

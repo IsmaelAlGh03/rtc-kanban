@@ -257,8 +257,8 @@ export function registerSocketHandlers(io: Server) {
 
     socket.on(
       'card:comment:add',
-      async (payload: { boardId: string; columnId: string; cardId: string; text: string }) => {
-        const { boardId, columnId, cardId, text } = payload;
+      async (payload: { boardId: string; columnId: string; cardId: string; text: string; mentions: string[] }) => {
+        const { boardId, columnId, cardId, text, mentions } = payload;
         const username = socket.data.username as string;
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
@@ -274,6 +274,7 @@ export function registerSocketHandlers(io: Server) {
             _id: new ObjectId().toString(),
             username,
             text,
+            mentions: Array.isArray(mentions) ? mentions : [],
             timestamp: new Date(),
           });
 
@@ -285,6 +286,25 @@ export function registerSocketHandlers(io: Server) {
           board.updatedAt = now;
 
           io.to(boardId).emit('board:updated', board);
+
+          const boardMembers = [board.owner, ...board.members];
+          const toNotify = [...new Set(
+            (Array.isArray(mentions) ? mentions : [])
+              .filter(m => boardMembers.includes(m) && m !== username)
+          )];
+
+          for (const mentionedUser of toNotify) {
+            createNotification({
+              userId: mentionedUser,
+              type: 'mentioned',
+              boardId,
+              boardTitle: board.title,
+              cardId,
+              cardTitle: card.title,
+              columnId,
+              fromUsername: username,
+            }).catch(err => console.error('mention notification error', err));
+          }
         } catch (err) {
           console.error('card:comment:add error', err);
         }

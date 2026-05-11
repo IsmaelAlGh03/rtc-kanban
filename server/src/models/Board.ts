@@ -3,6 +3,7 @@ export interface IComment {
   username: string;
   text: string;
   timestamp: Date;
+  mentions: string[];
 }
 
 export interface ICard {
