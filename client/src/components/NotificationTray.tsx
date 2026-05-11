@@ -13,9 +13,10 @@ function authHeaders() {
 
 interface Props {
   onBoardsChange: () => void;
+  onNavigateToCard: (boardId: string, columnId: string, cardId: string) => void;
 }
 
-export default function NotificationTray({ onBoardsChange }: Props) {
+export default function NotificationTray({ onBoardsChange, onNavigateToCard }: Props) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const ref = useRef<HTMLDivElement>(null);
@@ -78,7 +79,15 @@ export default function NotificationTray({ onBoardsChange }: Props) {
   function label(n: INotification) {
     if (n.type === 'invite') return <><strong>{n.fromUsername}</strong> invited you to <strong>{n.boardTitle}</strong></>;
     if (n.type === 'invite_accepted') return <><strong>{n.fromUsername}</strong> accepted your invite to <strong>{n.boardTitle}</strong></>;
+    if (n.type === 'assigned') return <><strong>{n.fromUsername}</strong> assigned you to <strong>{n.cardTitle}</strong> in <strong>{n.boardTitle}</strong></>;
     return <><strong>{n.fromUsername}</strong> declined your invite to <strong>{n.boardTitle}</strong></>;
+  }
+
+  function handleAssignedClick(n: INotification) {
+    if (n.cardId && n.columnId) {
+      setOpen(false);
+      onNavigateToCard(n.boardId, n.columnId, n.cardId);
+    }
   }
 
   return (
@@ -109,7 +118,11 @@ export default function NotificationTray({ onBoardsChange }: Props) {
               <p className="text-sm text-gray-400 text-center py-8">No notifications</p>
             ) : (
               notifications.map(n => (
-                <div key={n._id} className={`px-4 py-3 border-b border-gray-50 last:border-0 ${!n.read ? 'bg-blue-50/50' : ''}`}>
+                <div
+                  key={n._id}
+                  className={`px-4 py-3 border-b border-gray-50 last:border-0 ${!n.read ? 'bg-blue-50/50' : ''} ${n.type === 'assigned' ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
+                  onClick={n.type === 'assigned' ? () => handleAssignedClick(n) : undefined}
+                >
                   <p className="text-sm text-gray-700 leading-snug">{label(n)}</p>
                   <p className="text-[11px] text-gray-400 mt-1">
                     {new Date(n.createdAt).toLocaleDateString()}

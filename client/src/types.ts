@@ -40,10 +40,13 @@ export interface IBoard {
 export interface INotification {
   _id: string;
   userId: string;
-  type: 'invite' | 'invite_accepted' | 'invite_rejected';
+  type: 'invite' | 'invite_accepted' | 'invite_rejected' | 'assigned';
   boardId: string;
   boardTitle: string;
   fromUsername: string;
+  cardId?: string;
+  cardTitle?: string;
+  columnId?: string;
   read: boolean;
   createdAt: string;
 }

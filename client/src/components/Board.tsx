@@ -26,6 +26,7 @@ import CardModal from './CardModal';
 interface Props {
   board: IBoard;
   username: string;
+  initialCard?: { columnId: string; cardId: string };
   onLeave: () => void;
 }
 
@@ -43,12 +44,12 @@ function findCardPosition(cardId: string, cols: IColumn[]) {
   return null;
 }
 
-export default function Board({ board, username, onLeave }: Props) {
+export default function Board({ board, username, initialCard, onLeave }: Props) {
   const [localBoard, setLocalBoard] = useState(board);
   const [columns, setColumns] = useState(board.columns);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [selectedColId, setSelectedColId] = useState<string | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(initialCard?.cardId ?? null);
+  const [selectedColId, setSelectedColId] = useState<string | null>(initialCard?.columnId ?? null);
   const [activeCard, setActiveCard] = useState<ICard | null>(null);
   const [activeColumn, setActiveColumn] = useState<IColumn | null>(null);
   const cardOrigin = useRef<{ cardId: string; columnId: string } | null>(null);
@@ -292,6 +293,7 @@ export default function Board({ board, username, onLeave }: Props) {
           card={selectedCard}
           columnId={selectedColId}
           username={username}
+          members={[localBoard.owner, ...localBoard.members]}
           onClose={closeModal}
           onUpdate={(fields) => updateCard(selectedColId, selectedCard._id, fields)}
           onAddComment={(text) => addComment(selectedColId, selectedCard._id, text)}
