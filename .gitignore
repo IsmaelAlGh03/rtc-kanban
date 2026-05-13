@@ -1,3 +1,22 @@
+node_modules/
+dist/
+.env
+*.log
+
+# Client build
+client/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+CLAUDE.md
+.claude
+.agents
+skills-lock.json
+/docs
+.superpowers
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies

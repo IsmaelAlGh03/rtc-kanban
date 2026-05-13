@@ -1,0 +1,387 @@
+import { Server, Socket } from 'socket.io';
+import { ObjectId } from 'mongodb';
+import jwt from 'jsonwebtoken';
+import { getDB } from '../db';
+import { IBoard } from '../models/Board';
+import { JWT_SECRET } from '../config';
+import { createNotification } from '../services/notifications';
+
+function boards() {
+  return getDB().collection<IBoard>('boards');
+}
+
+export function registerSocketHandlers(io: Server) {
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error('Authentication required'));
+    try {
+      const payload = jwt.verify(token, JWT_SECRET) as { username: string };
+      socket.data.username = payload.username;
+      next();
+    } catch {
+      next(new Error('Invalid or expired token'));
+    }
+  });
+
+  io.on('connection', (socket: Socket) => {
+    socket.join(socket.data.username as string);
+    console.log(`Client connected: ${socket.id}`);
+
+    socket.on('board:join', async (boardId: string) => {
+      try {
+        const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+        if (!board) { socket.emit('board:error', 'Board not found'); return; }
+        const username = socket.data.username as string;
+        if (board.owner !== username && !board.members.includes(username)) {
+          socket.emit('board:error', 'Access denied');
+          return;
+        }
+        socket.join(boardId);
+        socket.emit('board:updated', board);
+      } catch {
+        socket.emit('board:error', 'Failed to join board');
+      }
+    });
+
+    socket.on(
+      'card:move',
+      async (payload: {
+        boardId: string;
+        cardId: string;
+        fromColumnId: string;
+        toColumnId: string;
+        toIndex: number;
+      }) => {
+        const { boardId, cardId, fromColumnId, toColumnId, toIndex } = payload;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const fromCol = board.columns.find((c) => c._id === fromColumnId);
+          const toCol = board.columns.find((c) => c._id === toColumnId);
+          if (!fromCol || !toCol) return;
+
+          const cardIndex = fromCol.cards.findIndex((c) => c._id === cardId);
+          if (cardIndex === -1) return;
+
+          const [card] = fromCol.cards.splice(cardIndex, 1);
+          toCol.cards.splice(toIndex, 0, card);
+
+          fromCol.cards.forEach((c, i) => (c.order = i));
+          toCol.cards.forEach((c, i) => (c.order = i));
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          io.to(boardId).emit('board:updated', board);
+        } catch (err) {
+          console.error('card:move error', err);
+        }
+      }
+    );
+
+    socket.on(
+      'card:add',
+      async (payload: { boardId: string; columnId: string; title: string }) => {
+        const { boardId, columnId, title } = payload;
+        const addedBy = socket.data.username as string;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const col = board.columns.find((c) => c._id === columnId);
+          if (!col) return;
+
+          col.cards.push({
+            _id: new ObjectId().toString(),
+            title,
+            order: col.cards.length,
+            addedBy,
+            urgency: 'low',
+            comments: [],
+          });
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          io.to(boardId).emit('board:updated', board);
+        } catch (err) {
+          console.error('card:add error', err);
+        }
+      }
+    );
+
+    socket.on(
+      'card:delete',
+      async (payload: { boardId: string; columnId: string; cardId: string }) => {
+        const { boardId, columnId, cardId } = payload;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const col = board.columns.find((c) => c._id === columnId);
+          if (!col) return;
+
+          col.cards = col.cards.filter((c) => c._id !== cardId);
+          col.cards.forEach((c, i) => (c.order = i));
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          io.to(boardId).emit('board:updated', board);
+        } catch (err) {
+          console.error('card:delete error', err);
+        }
+      }
+    );
+
+    socket.on('column:add', async (payload: { boardId: string; title: string }) => {
+      const { boardId, title } = payload;
+      try {
+        const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+        if (!board) return;
+
+        board.columns.push({
+          _id: new ObjectId().toString(),
+          title,
+          order: board.columns.length,
+          cards: [],
+        });
+
+        const now = new Date();
+        await boards().updateOne(
+          { _id: new ObjectId(boardId) as any },
+          { $set: { columns: board.columns, updatedAt: now } }
+        );
+        board.updatedAt = now;
+
+        io.to(boardId).emit('board:updated', board);
+      } catch (err) {
+        console.error('column:add error', err);
+      }
+    });
+
+    socket.on('column:delete', async (payload: { boardId: string; columnId: string }) => {
+      const { boardId, columnId } = payload;
+      try {
+        const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+        if (!board) return;
+
+        board.columns = board.columns.filter((c) => c._id !== columnId);
+        board.columns.forEach((c, i) => (c.order = i));
+
+        const now = new Date();
+        await boards().updateOne(
+          { _id: new ObjectId(boardId) as any },
+          { $set: { columns: board.columns, updatedAt: now } }
+        );
+        board.updatedAt = now;
+
+        io.to(boardId).emit('board:updated', board);
+      } catch (err) {
+        console.error('column:delete error', err);
+      }
+    });
+
+    socket.on(
+      'card:update',
+      async (payload: {
+        boardId: string;
+        columnId: string;
+        cardId: string;
+        title?: string;
+        description?: string;
+        assignedTo?: string;
+        urgency?: 'low' | 'medium' | 'high';
+      }) => {
+        const { boardId, columnId, cardId, title, description, assignedTo, urgency } = payload;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const col = board.columns.find((c) => c._id === columnId);
+          if (!col) return;
+
+          const card = col.cards.find((c) => c._id === cardId);
+          if (!card) return;
+
+          const previousAssignee = card.assignedTo;
+          if (title !== undefined) card.title = title;
+          if (description !== undefined) card.description = description;
+          if (assignedTo !== undefined) card.assignedTo = assignedTo;
+          if (urgency !== undefined) card.urgency = urgency;
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          const assigner = socket.data.username as string;
+          if (
+            assignedTo !== undefined &&
+            assignedTo !== '' &&
+            assignedTo !== previousAssignee &&
+            assignedTo !== assigner
+          ) {
+            createNotification({
+              userId: assignedTo,
+              type: 'assigned',
+              boardId,
+              boardTitle: board.title,
+              cardId,
+              cardTitle: card.title,
+              columnId,
+              fromUsername: assigner,
+            }).catch(err => console.error('assignment notification error', err));
+          }
+
+          io.to(boardId).emit('board:updated', board);
+        } catch (err) {
+          console.error('card:update error', err);
+        }
+      }
+    );
+
+    socket.on(
+      'card:comment:add',
+      async (payload: { boardId: string; columnId: string; cardId: string; text: string; mentions: string[] }) => {
+        const { boardId, columnId, cardId, text, mentions } = payload;
+        const username = socket.data.username as string;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const col = board.columns.find((c) => c._id === columnId);
+          if (!col) return;
+
+          const card = col.cards.find((c) => c._id === cardId);
+          if (!card) return;
+
+          card.comments.push({
+            _id: new ObjectId().toString(),
+            username,
+            text,
+            mentions: Array.isArray(mentions) ? mentions : [],
+            timestamp: new Date(),
+          });
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          io.to(boardId).emit('board:updated', board);
+
+          const boardMembers = [board.owner, ...board.members];
+          const toNotify = [...new Set(
+            (Array.isArray(mentions) ? mentions : [])
+              .filter(m => boardMembers.includes(m) && m !== username)
+          )];
+
+          for (const mentionedUser of toNotify) {
+            createNotification({
+              userId: mentionedUser,
+              type: 'mentioned',
+              boardId,
+              boardTitle: board.title,
+              cardId,
+              cardTitle: card.title,
+              columnId,
+              fromUsername: username,
+            }).catch(err => console.error('mention notification error', err));
+          }
+        } catch (err) {
+          console.error('card:comment:add error', err);
+        }
+      }
+    );
+
+    socket.on(
+      'column:update',
+      async (payload: { boardId: string; columnId: string; title: string }) => {
+        const { boardId, columnId, title } = payload;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const col = board.columns.find((c) => c._id === columnId);
+          if (!col) return;
+
+          col.title = title;
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          io.to(boardId).emit('board:updated', board);
+        } catch (err) {
+          console.error('column:update error', err);
+        }
+      }
+    );
+
+    socket.on(
+      'column:move',
+      async (payload: { boardId: string; columnId: string; toIndex: number }) => {
+        const { boardId, columnId, toIndex } = payload;
+        try {
+          const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
+          if (!board) return;
+
+          const colIndex = board.columns.findIndex((c) => c._id === columnId);
+          if (colIndex === -1) return;
+
+          const [col] = board.columns.splice(colIndex, 1);
+          board.columns.splice(toIndex, 0, col);
+          board.columns.forEach((c, i) => (c.order = i));
+
+          const now = new Date();
+          await boards().updateOne(
+            { _id: new ObjectId(boardId) as any },
+            { $set: { columns: board.columns, updatedAt: now } }
+          );
+          board.updatedAt = now;
+
+          io.to(boardId).emit('board:updated', board);
+        } catch (err) {
+          console.error('column:move error', err);
+        }
+      }
+    );
+
+    socket.on(
+      'chat:message',
+      (payload: { boardId: string; text: string }) => {
+        const { boardId, text } = payload;
+        io.to(boardId).emit('chat:message', {
+          username: socket.data.username as string,
+          text,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    );
+
+    socket.on('disconnect', () => {
+      console.log(`Client disconnected: ${socket.id}`);
+    });
+  });
+}
