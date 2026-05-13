@@ -1,10 +1,25 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import { getDB } from '../db';
 import { JWT_SECRET } from '../config';
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: { error: 'Too many login attempts, please try again later.' },
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: { error: 'Too many registration attempts, please try again later.' },
+  skip: () => process.env.NODE_ENV === 'test',
+});
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_RULES = [
@@ -23,7 +38,7 @@ function validatePassword(password: string): string | null {
   return null;
 }
 
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
+router.post('/register', registerLimiter, async (req: Request, res: Response): Promise<void> => {
   const { username, email, password } = req.body;
 
   if (!username?.trim() || !password) {
@@ -63,7 +78,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   res.status(201).json({ token, username: name });
 });
 
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/login', loginLimiter, async (req: Request, res: Response): Promise<void> => {
   const { identifier, password } = req.body;
   if (!identifier?.trim() || !password) {
     res.status(400).json({ error: 'Identifier and password are required' });
