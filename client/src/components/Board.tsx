@@ -52,6 +52,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
   const [selectedColId, setSelectedColId] = useState<string | null>(initialCard?.columnId ?? null);
   const [activeCard, setActiveCard] = useState<ICard | null>(null);
   const [activeColumn, setActiveColumn] = useState<IColumn | null>(null);
+  const [boardLoading, setBoardLoading] = useState(true);
   const cardOrigin = useRef<{ cardId: string; columnId: string } | null>(null);
 
   const sensors = useSensors(
@@ -65,6 +66,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
     function onBoardUpdated(updated: IBoard) {
       setLocalBoard(updated);
       setColumns(updated.columns);
+      setBoardLoading(false);
     }
     function onChatMessage(msg: ChatMessage) {
       setMessages(prev => [...prev, msg]);
@@ -242,48 +244,61 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDragEnd={onDragEnd}
-        >
-          <SortableContext items={columns.map(c => c._id)} strategy={horizontalListSortingStrategy}>
-            <div className="flex gap-4 p-4 overflow-x-auto flex-1 items-start">
-              {columns.map(col => (
-                <Column
-                  key={col._id}
-                  column={col}
-                  onAddCard={addCard}
-                  onDeleteCard={deleteCard}
-                  onSelectCard={(cardId) => openCard(col._id, cardId)}
-                />
-              ))}
-            </div>
-          </SortableContext>
+        {boardLoading ? (
+          <div className="flex gap-4 p-4 overflow-x-auto flex-1 items-start">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-gray-200 rounded-xl p-3 min-w-[260px] flex flex-col gap-2">
+                <div className="skeleton h-4 w-24 rounded" />
+                <div className="skeleton h-16 rounded-lg" />
+                <div className="skeleton h-16 rounded-lg" />
+                <div className="skeleton h-8 rounded-lg mt-auto" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+            onDragEnd={onDragEnd}
+          >
+            <SortableContext items={columns.map(c => c._id)} strategy={horizontalListSortingStrategy}>
+              <div className="flex gap-4 p-4 overflow-x-auto flex-1 items-start">
+                {columns.map(col => (
+                  <Column
+                    key={col._id}
+                    column={col}
+                    onAddCard={addCard}
+                    onDeleteCard={deleteCard}
+                    onSelectCard={(cardId) => openCard(col._id, cardId)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
 
-          <DragOverlay>
-            {activeCard && (
-              <div
-                className="bg-white rounded-lg px-3 py-2.5 shadow-lg opacity-90 min-w-[220px]"
-                style={{ borderLeft: `3px solid ${URGENCY_BORDER[activeCard.urgency ?? 'low']}` }}
-              >
-                <span className="text-sm leading-snug">{activeCard.title}</span>
-                {activeCard.assignedTo && (
-                  <span className="text-[11px] font-semibold text-gray-500 block">@{activeCard.assignedTo}</span>
-                )}
-              </div>
-            )}
-            {activeColumn && (
-              <div className="bg-gray-200 rounded-xl p-3 min-w-[260px] opacity-90">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
-                  {activeColumn.title}
-                </h3>
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
+            <DragOverlay>
+              {activeCard && (
+                <div
+                  className="bg-white rounded-lg px-3 py-2.5 shadow-lg opacity-90 min-w-[220px]"
+                  style={{ borderLeft: `3px solid ${URGENCY_BORDER[activeCard.urgency ?? 'low']}` }}
+                >
+                  <span className="text-sm leading-snug">{activeCard.title}</span>
+                  {activeCard.assignedTo && (
+                    <span className="text-[11px] font-semibold text-gray-500 block">@{activeCard.assignedTo}</span>
+                  )}
+                </div>
+              )}
+              {activeColumn && (
+                <div className="bg-gray-200 rounded-xl p-3 min-w-[260px] opacity-90">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
+                    {activeColumn.title}
+                  </h3>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+        )}
 
         <Chat messages={messages} onSend={sendMessage} username={username} />
       </div>
@@ -344,15 +359,21 @@ function Column({ column, onAddCard, onDeleteCard, onSelectCard }: {
 
       <SortableContext items={column.cards.map(c => c._id)} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col gap-2 overflow-y-auto flex-1">
-          {column.cards.map(card => (
-            <SortableCard
-              key={card._id}
-              card={card}
-              columnId={column._id}
-              onDelete={() => onDeleteCard(column._id, card._id)}
-              onSelect={() => onSelectCard(card._id)}
-            />
-          ))}
+          {column.cards.length === 0 ? (
+            <div className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center py-4 text-xs text-gray-400">
+              No cards yet
+            </div>
+          ) : (
+            column.cards.map(card => (
+              <SortableCard
+                key={card._id}
+                card={card}
+                columnId={column._id}
+                onDelete={() => onDeleteCard(column._id, card._id)}
+                onSelect={() => onSelectCard(card._id)}
+              />
+            ))
+          )}
         </div>
       </SortableContext>
 

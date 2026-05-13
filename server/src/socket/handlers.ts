@@ -37,6 +37,7 @@ export function registerSocketHandlers(io: Server) {
           return;
         }
         socket.join(boardId);
+        socket.emit('board:updated', board);
       } catch {
         socket.emit('board:error', 'Failed to join board');
       }

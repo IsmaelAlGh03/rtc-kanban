@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IBoard } from './types';
 import Board from './components/Board';
 import BoardModal from './components/BoardModal';
@@ -26,6 +26,8 @@ export default function App() {
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [currentBoard, setCurrentBoard] = useState<IBoard | null>(null);
   const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [boardsLoading, setBoardsLoading] = useState(false);
+  const newBoardInputRef = useRef<HTMLInputElement>(null);
   const [editingBoard, setEditingBoard] = useState<IBoard | null>(null);
   const [pendingCard, setPendingCard] = useState<{ columnId: string; cardId: string } | null>(null);
 
@@ -93,9 +95,14 @@ export default function App() {
   }
 
   async function fetchBoards() {
-    const res = await fetch(`${API}/boards`, { headers: authHeaders() });
-    if (res.status === 401) { logout(); return; }
-    setBoards(await res.json());
+    setBoardsLoading(true);
+    try {
+      const res = await fetch(`${API}/boards`, { headers: authHeaders() });
+      if (res.status === 401) { logout(); return; }
+      setBoards(await res.json());
+    } finally {
+      setBoardsLoading(false);
+    }
   }
 
   async function saveBoard(id: string, updates: Pick<IBoard, 'title' | 'description' | 'color'>) {
@@ -281,13 +288,13 @@ export default function App() {
           </p>
         )}
         {isOwned && (
-          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 right-2 flex gap-1 opacity-25 group-hover:opacity-100 transition-opacity">
             <button
               className={`p-1 rounded ${iconColor} transition-colors`}
               onClick={e => { e.stopPropagation(); setEditingBoard(b); }}
               title="Edit board"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16.414H8v-2a2 2 0 01.586-1.414z" />
               </svg>
             </button>
@@ -317,9 +324,29 @@ export default function App() {
 
       <section className="mb-8">
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">My Boards</h2>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-          {myBoards.map(renderBoardCard)}
-        </div>
+        {boardsLoading ? (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="skeleton rounded-xl h-20" />
+            ))}
+          </div>
+        ) : myBoards.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <span className="text-4xl mb-3">📋</span>
+            <p className="font-semibold text-gray-700 mb-1">No boards yet</p>
+            <p className="text-sm text-gray-400 mb-4">Create your first board to get started</p>
+            <button
+              className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+              onClick={() => newBoardInputRef.current?.focus()}
+            >
+              + Create Board
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+            {myBoards.map(renderBoardCard)}
+          </div>
+        )}
       </section>
 
       {sharedBoards.length > 0 && (
@@ -347,6 +374,7 @@ export default function App() {
 
       <div className="flex gap-2 max-w-sm">
         <input
+          ref={newBoardInputRef}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 flex-1"
           value={newBoardTitle}
           onChange={e => setNewBoardTitle(e.target.value)}
