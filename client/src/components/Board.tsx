@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getSocket } from '../socket';
+import { toast } from 'sonner';
 import { IBoard, ICard, IColumn, ChatMessage } from '../types';
 import Chat from './Chat';
 import CardModal from './CardModal';
@@ -54,6 +55,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
   const [activeColumn, setActiveColumn] = useState<IColumn | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
   const cardOrigin = useRef<{ cardId: string; columnId: string } | null>(null);
+  const disconnectToastId = useRef<string | number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -71,13 +73,32 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
     function onChatMessage(msg: ChatMessage) {
       setMessages(prev => [...prev, msg]);
     }
+    function onDisconnect() {
+      disconnectToastId.current = toast.error('Connection lost. Reconnecting…', { duration: Infinity });
+    }
+    function onReconnect() {
+      if (disconnectToastId.current !== null) {
+        toast.dismiss(disconnectToastId.current);
+        disconnectToastId.current = null;
+        toast.success('Reconnected');
+      }
+    }
+    function onBoardError(msg: string) {
+      toast.error(msg, { duration: 6000 });
+    }
 
     socket.on('board:updated', onBoardUpdated);
     socket.on('chat:message', onChatMessage);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect', onReconnect);
+    socket.on('board:error', onBoardError);
 
     return () => {
       socket.off('board:updated', onBoardUpdated);
       socket.off('chat:message', onChatMessage);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect', onReconnect);
+      socket.off('board:error', onBoardError);
     };
   }, [board._id]);
 
@@ -88,6 +109,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
   function deleteCard(columnId: string, cardId: string) {
     getSocket().emit('card:delete', { boardId: localBoard._id, columnId, cardId });
     if (cardId === selectedCardId) closeModal();
+    toast.error('Card deleted');
   }
 
   function updateCard(columnId: string, cardId: string, fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high' }) {

@@ -4,6 +4,7 @@ import Board from './components/Board';
 import BoardModal from './components/BoardModal';
 import NotificationTray from './components/NotificationTray';
 import { resetSocket } from './socket';
+import { toast } from 'sonner';
 
 const API = 'http://localhost:4000/api';
 
@@ -99,40 +100,61 @@ export default function App() {
     try {
       const res = await fetch(`${API}/boards`, { headers: authHeaders() });
       if (res.status === 401) { logout(); return; }
+      if (!res.ok) { toast.error('Failed to load boards', { duration: 6000 }); return; }
       setBoards(await res.json());
+    } catch {
+      toast.error('Failed to load boards', { duration: 6000 });
     } finally {
       setBoardsLoading(false);
     }
   }
 
   async function saveBoard(id: string, updates: Pick<IBoard, 'title' | 'description' | 'color'>) {
-    const res = await fetch(`${API}/boards/${id}`, {
-      method: 'PATCH',
-      headers: authHeaders(),
-      body: JSON.stringify(updates),
-    });
-    if (res.status === 401) { logout(); return; }
-    setBoards(prev => prev.map(b => b._id === id ? { ...b, ...updates } : b));
+    try {
+      const res = await fetch(`${API}/boards/${id}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify(updates),
+      });
+      if (res.status === 401) { logout(); return; }
+      if (!res.ok) { toast.error('Failed to save board', { duration: 6000 }); return; }
+      setBoards(prev => prev.map(b => b._id === id ? { ...b, ...updates } : b));
+      toast.success('Board saved');
+    } catch {
+      toast.error('Failed to save board', { duration: 6000 });
+    }
   }
 
   async function deleteBoard(id: string) {
-    const res = await fetch(`${API}/boards/${id}`, { method: 'DELETE', headers: authHeaders() });
-    if (res.status === 401) { logout(); return; }
-    setBoards(prev => prev.filter(b => b._id !== id));
-    setEditingBoard(null);
+    try {
+      const res = await fetch(`${API}/boards/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (res.status === 401) { logout(); return; }
+      if (!res.ok) { toast.error('Failed to delete board', { duration: 6000 }); return; }
+      setBoards(prev => prev.filter(b => b._id !== id));
+      setEditingBoard(null);
+      toast.error('Board deleted');
+    } catch {
+      toast.error('Failed to delete board', { duration: 6000 });
+    }
   }
 
   async function createBoard() {
     if (!newBoardTitle.trim()) return;
-    const res = await fetch(`${API}/boards`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ title: newBoardTitle.trim() }),
-    });
-    if (res.status === 401) { logout(); return; }
-    const board = await res.json();
-    setBoards(prev => [...prev, board]);
-    setNewBoardTitle('');
+    try {
+      const res = await fetch(`${API}/boards`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ title: newBoardTitle.trim() }),
+      });
+      if (res.status === 401) { logout(); return; }
+      if (!res.ok) { toast.error('Failed to create board', { duration: 6000 }); return; }
+      const board = await res.json();
+      setBoards(prev => [...prev, board]);
+      setNewBoardTitle('');
+      toast.success('Board created');
+    } catch {
+      toast.error('Failed to create board', { duration: 6000 });
+    }
   }
 
   // ── Auth screen ─────────────────────────────────────────
