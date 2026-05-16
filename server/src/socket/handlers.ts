@@ -5,6 +5,7 @@ import { getDB } from '../db';
 import { IBoard } from '../models/Board';
 import { JWT_SECRET } from '../config';
 import { createNotification } from '../services/notifications';
+import { sanitize } from '../utils/sanitize';
 
 function boards() {
   return getDB().collection<IBoard>('boards');
@@ -87,7 +88,8 @@ export function registerSocketHandlers(io: Server) {
     socket.on(
       'card:add',
       async (payload: { boardId: string; columnId: string; title: string }) => {
-        const { boardId, columnId, title } = payload;
+        const { boardId, columnId, title: rawTitle } = payload;
+        const title = sanitize(rawTitle);
         const addedBy = socket.data.username as string;
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
@@ -148,7 +150,8 @@ export function registerSocketHandlers(io: Server) {
     );
 
     socket.on('column:add', async (payload: { boardId: string; title: string }) => {
-      const { boardId, title } = payload;
+      const { boardId, title: rawTitle } = payload;
+      const title = sanitize(rawTitle);
       try {
         const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
         if (!board) return;
@@ -206,7 +209,7 @@ export function registerSocketHandlers(io: Server) {
         assignedTo?: string;
         urgency?: 'low' | 'medium' | 'high';
       }) => {
-        const { boardId, columnId, cardId, title, description, assignedTo, urgency } = payload;
+        const { boardId, columnId, cardId, title: rawTitle, description: rawDescription, assignedTo, urgency } = payload;
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
           if (!board) return;
@@ -218,8 +221,8 @@ export function registerSocketHandlers(io: Server) {
           if (!card) return;
 
           const previousAssignee = card.assignedTo;
-          if (title !== undefined) card.title = title;
-          if (description !== undefined) card.description = description;
+          if (rawTitle !== undefined) card.title = sanitize(rawTitle);
+          if (rawDescription !== undefined) card.description = sanitize(rawDescription);
           if (assignedTo !== undefined) card.assignedTo = assignedTo;
           if (urgency !== undefined) card.urgency = urgency;
 
@@ -259,7 +262,8 @@ export function registerSocketHandlers(io: Server) {
     socket.on(
       'card:comment:add',
       async (payload: { boardId: string; columnId: string; cardId: string; text: string; mentions: string[] }) => {
-        const { boardId, columnId, cardId, text, mentions } = payload;
+        const { boardId, columnId, cardId, text: rawText, mentions } = payload;
+        const text = sanitize(rawText);
         const username = socket.data.username as string;
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
@@ -315,7 +319,8 @@ export function registerSocketHandlers(io: Server) {
     socket.on(
       'column:update',
       async (payload: { boardId: string; columnId: string; title: string }) => {
-        const { boardId, columnId, title } = payload;
+        const { boardId, columnId, title: rawTitle } = payload;
+        const title = sanitize(rawTitle);
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
           if (!board) return;
@@ -371,7 +376,8 @@ export function registerSocketHandlers(io: Server) {
     socket.on(
       'chat:message',
       (payload: { boardId: string; text: string }) => {
-        const { boardId, text } = payload;
+        const { boardId, text: rawText } = payload;
+        const text = sanitize(rawText);
         io.to(boardId).emit('chat:message', {
           username: socket.data.username as string,
           text,

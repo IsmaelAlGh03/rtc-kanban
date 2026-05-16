@@ -5,6 +5,7 @@ import { getDB } from '../db';
 import { IBoard } from '../models/Board';
 import { AuthRequest } from '../middleware/auth';
 import { createNotification } from '../services/notifications';
+import { sanitize } from '../utils/sanitize';
 
 const router = Router();
 
@@ -65,8 +66,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     const username = req.username!;
     const now = new Date();
     const board: IBoard = {
-      title: req.body.title || 'My Board',
-      ...(req.body.description && { description: req.body.description }),
+      title: sanitize(req.body.title || 'My Board'),
+      ...(req.body.description && { description: sanitize(req.body.description) }),
       ...(req.body.color && { color: req.body.color }),
       owner: username,
       members: [],
@@ -95,8 +96,8 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
     const { title, description, color } = req.body;
     if (!title || typeof title !== 'string') return res.status(400).json({ error: 'title is required' });
 
-    const update: Record<string, unknown> = { title: title.trim(), updatedAt: new Date() };
-    if (typeof description === 'string') update.description = description.trim();
+    const update: Record<string, unknown> = { title: sanitize(title.trim()), updatedAt: new Date() };
+    if (typeof description === 'string') update.description = sanitize(description.trim());
     if (typeof color === 'string') update.color = color;
 
     await boards().updateOne({ _id: board._id as any }, { $set: update });
