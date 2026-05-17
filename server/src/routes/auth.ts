@@ -2,8 +2,11 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
 import { getDB } from '../db';
 import { JWT_SECRET } from '../config';
+import { sendConfirmationEmail } from '../services/email';
+import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -72,10 +75,25 @@ router.post('/register', registerLimiter, async (req: Request, res: Response): P
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await getDB().collection('users').insertOne({ username: name, email: normalizedEmail, passwordHash });
 
-  const token = jwt.sign({ username: name }, JWT_SECRET, { expiresIn: '7d' });
-  res.status(201).json({ token, username: name });
+  const verifyToken = crypto.randomBytes(32).toString('hex');
+  const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
+  await getDB().collection('users').insertOne({
+    username: name,
+    email: normalizedEmail,
+    passwordHash,
+    emailVerified: false,
+    emailVerificationToken: verifyToken,
+    emailVerificationExpires: tokenExpiry,
+  });
+
+  sendConfirmationEmail(normalizedEmail, name, verifyToken).catch(err =>
+    console.error('Failed to send confirmation email:', err)
+  );
+
+  const jwtToken = jwt.sign({ username: name }, JWT_SECRET, { expiresIn: '7d' });
+  res.status(201).json({ token: jwtToken, username: name });
 });
 
 router.post('/login', loginLimiter, async (req: Request, res: Response): Promise<void> => {
@@ -97,6 +115,12 @@ router.post('/login', loginLimiter, async (req: Request, res: Response): Promise
 
   const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' });
   res.json({ token, username: user.username });
+});
+
+router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = await getDB().collection('users').findOne({ username: req.username });
+  if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+  res.json({ username: user.username, emailVerified: user.emailVerified ?? false });
 });
 
 export default router;

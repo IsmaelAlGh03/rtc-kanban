@@ -1,6 +1,15 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import { connectDB } from '../db';
+
+jest.mock('../services/email', () => ({
+  sendConfirmationEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+  sendInviteEmail: jest.fn().mockResolvedValue(undefined),
+  sendMentionEmail: jest.fn().mockResolvedValue(undefined),
+  sendAssignmentEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
 import app from '../app';
 
 let mongod: MongoMemoryServer;

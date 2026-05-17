@@ -1,12 +1,10 @@
+import './env';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import dotenv from 'dotenv';
 import { connectDB } from './db';
 import { registerSocketHandlers } from './socket/handlers';
 import { initNotificationService } from './services/notifications';
 import app from './app';
-
-dotenv.config();
 
 const httpServer = createServer(app);
 
