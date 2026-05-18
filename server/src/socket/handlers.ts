@@ -308,6 +308,7 @@ export function registerSocketHandlers(io: Server) {
               cardTitle: card.title,
               columnId,
               fromUsername: username,
+              commentText: text,
             }).catch(err => console.error('mention notification error', err));
           }
         } catch (err) {

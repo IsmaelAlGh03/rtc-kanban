@@ -48,6 +48,7 @@ export interface INotification {
   cardId?: string;
   cardTitle?: string;
   columnId?: string;
+  commentText?: string;
   read: boolean;
   createdAt: string;
 }
