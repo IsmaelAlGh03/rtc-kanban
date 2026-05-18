@@ -48,6 +48,10 @@ router.post('/register', registerLimiter, async (req: Request, res: Response): P
     res.status(400).json({ error: 'Username and password are required' });
     return;
   }
+  if (username.includes('@')) {
+    res.status(400).json({ error: 'Username cannot contain @' });
+    return;
+  }
   if (!email?.trim() || !EMAIL_RE.test(email.trim())) {
     res.status(400).json({ error: 'A valid email is required' });
     return;

@@ -45,6 +45,23 @@ export default function App() {
     if (username) fetchBoards();
   }, [username]);
 
+  useEffect(() => {
+    if (!username) return;
+    const match = window.location.pathname.match(/^\/join\/([a-f0-9]+)$/);
+    if (!match) return;
+    const token = match[1];
+    window.history.replaceState(null, '', '/');
+    fetch(`${API}/boards/join/${token}`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : null)
+      .then(board => {
+        if (!board) { toast.error('Invalid or expired invite link'); return; }
+        setBoards(prev => prev.some(b => b._id === board._id) ? prev : [...prev, board]);
+        setCurrentBoard(board);
+        toast.success(`Joined "${board.title}"`);
+      })
+      .catch(() => toast.error('Failed to join board'));
+  }, [username]);
+
   async function submitAuth(e: React.FormEvent) {
     e.preventDefault();
     setAuthError('');

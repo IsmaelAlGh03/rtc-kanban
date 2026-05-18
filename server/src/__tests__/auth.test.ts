@@ -84,6 +84,14 @@ describe('POST /api/auth/register', () => {
     expect(res.body.error).toMatch(/password/i);
   });
 
+  test('rejects username containing @', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'bad@user', email: 'baduser@example.com', password: 'Password1!' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/username/i);
+  });
+
   test('registers successfully with valid username, email, and password', async () => {
     const res = await request(app)
       .post('/api/auth/register')
