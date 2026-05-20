@@ -227,12 +227,12 @@ describe('POST /api/auth/reset-password', () => {
   });
 
   test('returns 400 for weak new password', async () => {
-    const res = await request(app).post('/api/auth/reset-password').send({ token: resetToken, password: 'weak' });
+    const res = await request(app).post('/api/auth/reset-password').send({ token: resetToken, newPassword: 'weak' });
     expect(res.status).toBe(400);
   });
 
   test('resets password and clears token with valid request', async () => {
-    const res = await request(app).post('/api/auth/reset-password').send({ token: resetToken, password: 'NewPass1!' });
+    const res = await request(app).post('/api/auth/reset-password').send({ token: resetToken, newPassword: 'NewPass1!' });
     expect(res.status).toBe(200);
     const user = await getDB().collection('users').findOne({ username: baseUser.username });
     expect(user!.passwordResetToken).toBeUndefined();
