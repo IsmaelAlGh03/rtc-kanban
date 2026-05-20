@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { IBoard } from './types';
 import Board from './components/Board';
 import BoardModal from './components/BoardModal';
@@ -46,6 +46,13 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [authSuccess, setAuthSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Account deletion state
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const location = useLocation();
 
   useEffect(() => {
     if (username) fetchBoards();
@@ -189,13 +196,15 @@ export default function App() {
     }
   }
 
+  // ── Special routes (always accessible regardless of auth state) ─────
+  if (location.pathname === '/verify-email') return <VerifyEmail onVerified={() => setEmailVerified(true)} />;
+  if (location.pathname === '/forgot-password') return <ForgotPassword />;
+  if (location.pathname === '/reset-password') return <ResetPassword />;
+
   // ── Auth screen ─────────────────────────────────────────
   if (!username) {
     return (
       <Routes>
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={
       <div className="flex flex-col items-center justify-center h-screen gap-6 bg-gray-100">
         <h1 className="text-4xl font-bold text-gray-800">RTC Kanban</h1>
@@ -323,11 +332,6 @@ export default function App() {
       />
     );
   }
-
-  // ── Account deletion ────────────────────────────────────
-  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   async function deleteAccount() {
     setDeleteLoading(true);

@@ -3,7 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 
 const API = 'http://localhost:4000/api';
 
-export default function VerifyEmail() {
+interface Props {
+  onVerified?: () => void;
+}
+
+export default function VerifyEmail({ onVerified }: Props) {
   const [params] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -21,6 +25,7 @@ export default function VerifyEmail() {
         if (r.ok) {
           setStatus('success');
           setMessage(data.message ?? 'Email verified!');
+          onVerified?.();
         } else {
           setStatus('error');
           setMessage(data.error ?? 'Verification failed.');
