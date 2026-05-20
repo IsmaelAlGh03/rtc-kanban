@@ -55,6 +55,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
   const [activeColumn, setActiveColumn] = useState<IColumn | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [chatOpen, setChatOpen] = useState(false);
   const cardOrigin = useRef<{ cardId: string; columnId: string } | null>(null);
   const disconnectToastId = useRef<string | number | null>(null);
 
@@ -256,9 +257,9 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex items-center justify-between px-6 py-3 bg-gray-900 text-white shrink-0 gap-4">
+      <div className="flex items-center px-4 sm:px-6 py-3 bg-gray-900 text-white shrink-0 gap-3 flex-wrap">
         <h2 className="text-lg font-semibold shrink-0">{localBoard.title}</h2>
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 min-w-[120px] max-w-xs">
           <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
           </svg>
@@ -269,12 +270,23 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <button
-          className="text-sm px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors shrink-0"
-          onClick={onLeave}
-        >
-          ← Boards
-        </button>
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          <button
+            className="md:hidden p-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+            onClick={() => setChatOpen(true)}
+            aria-label="Open chat"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </button>
+          <button
+            className="text-sm px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+            onClick={onLeave}
+          >
+            ← Boards
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -339,7 +351,18 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
           </DndContext>
         )}
 
-        <Chat messages={messages} onSend={sendMessage} username={username} />
+        {/* Desktop chat panel */}
+        <div className="hidden md:flex">
+          <Chat messages={messages} onSend={sendMessage} username={username} />
+        </div>
+
+        {/* Mobile chat drawer */}
+        <div className={`md:hidden fixed inset-0 z-40 transition-opacity duration-200 ${chatOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+          <div className="absolute inset-0 bg-black/50" onClick={() => setChatOpen(false)} />
+          <div className={`absolute top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white flex flex-col transition-transform duration-200 ${chatOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <Chat messages={messages} onSend={sendMessage} username={username} onClose={() => setChatOpen(false)} />
+          </div>
+        </div>
       </div>
 
       {selectedCard && selectedColId && (
@@ -386,7 +409,7 @@ function Column({ column, onAddCard, onDeleteCard, onSelectCard }: {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-gray-200 rounded-xl p-3 min-w-[260px] max-w-[260px] flex flex-col gap-2 max-h-[calc(100vh-110px)]"
+      className="bg-gray-200 rounded-xl p-3 min-w-[240px] max-w-[240px] sm:min-w-[260px] sm:max-w-[260px] flex flex-col gap-2 max-h-[calc(100vh-110px)]"
     >
       <h3
         className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1 cursor-grab active:cursor-grabbing select-none"

@@ -93,11 +93,11 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
 
   return (
     <div
-      className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-50 sm:bg-black/45 sm:flex sm:items-center sm:justify-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+        className="bg-white flex flex-col overflow-hidden w-full h-full sm:rounded-2xl sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[85vh] sm:shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

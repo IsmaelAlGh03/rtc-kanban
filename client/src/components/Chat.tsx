@@ -5,9 +5,10 @@ interface Props {
   messages: ChatMessage[];
   username: string;
   onSend: (text: string) => void;
+  onClose?: () => void;
 }
 
-export default function Chat({ messages, username, onSend }: Props) {
+export default function Chat({ messages, username, onSend, onClose }: Props) {
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -23,8 +24,11 @@ export default function Chat({ messages, username, onSend }: Props) {
 
   return (
     <div className="w-[300px] min-w-[300px] bg-white border-l border-gray-200 flex flex-col">
-      <div className="px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200 shrink-0">
+      <div className="px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200 shrink-0 flex items-center justify-between">
         Chat
+        {onClose && (
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none transition-colors">×</button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">

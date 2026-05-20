@@ -50,7 +50,7 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-6 bg-gray-100">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gray-100 px-4">
         <h1 className="text-4xl font-bold text-gray-800">RTC Kanban</h1>
         <div className="bg-white rounded-2xl shadow-md w-full max-w-sm p-8 flex flex-col gap-4 items-center text-center">
           <p className="text-sm text-red-600">No reset token found in the link.</p>
@@ -61,7 +61,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen gap-6 bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gray-100 px-4">
       <h1 className="text-4xl font-bold text-gray-800">RTC Kanban</h1>
       <div className="bg-white rounded-2xl shadow-md w-full max-w-sm p-8 flex flex-col gap-5">
         <div>
