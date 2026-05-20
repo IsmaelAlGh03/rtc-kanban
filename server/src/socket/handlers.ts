@@ -54,6 +54,7 @@ export function registerSocketHandlers(io: Server) {
         toIndex: number;
       }) => {
         const { boardId, cardId, fromColumnId, toColumnId, toIndex } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
           if (!board) return;
@@ -89,6 +90,7 @@ export function registerSocketHandlers(io: Server) {
       'card:add',
       async (payload: { boardId: string; columnId: string; title: string }) => {
         const { boardId, columnId, title: rawTitle } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         const title = sanitize(rawTitle);
         const addedBy = socket.data.username as string;
         try {
@@ -125,6 +127,7 @@ export function registerSocketHandlers(io: Server) {
       'card:delete',
       async (payload: { boardId: string; columnId: string; cardId: string }) => {
         const { boardId, columnId, cardId } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
           if (!board) return;
@@ -151,6 +154,7 @@ export function registerSocketHandlers(io: Server) {
 
     socket.on('column:add', async (payload: { boardId: string; title: string }) => {
       const { boardId, title: rawTitle } = payload;
+      if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
       const title = sanitize(rawTitle);
       try {
         const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
@@ -178,6 +182,7 @@ export function registerSocketHandlers(io: Server) {
 
     socket.on('column:delete', async (payload: { boardId: string; columnId: string }) => {
       const { boardId, columnId } = payload;
+      if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
       try {
         const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
         if (!board) return;
@@ -210,6 +215,7 @@ export function registerSocketHandlers(io: Server) {
         urgency?: 'low' | 'medium' | 'high';
       }) => {
         const { boardId, columnId, cardId, title: rawTitle, description: rawDescription, assignedTo, urgency } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
           if (!board) return;
@@ -263,6 +269,7 @@ export function registerSocketHandlers(io: Server) {
       'card:comment:add',
       async (payload: { boardId: string; columnId: string; cardId: string; text: string; mentions: string[] }) => {
         const { boardId, columnId, cardId, text: rawText, mentions } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         const text = sanitize(rawText);
         const username = socket.data.username as string;
         try {
@@ -321,6 +328,7 @@ export function registerSocketHandlers(io: Server) {
       'column:update',
       async (payload: { boardId: string; columnId: string; title: string }) => {
         const { boardId, columnId, title: rawTitle } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         const title = sanitize(rawTitle);
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
@@ -349,6 +357,7 @@ export function registerSocketHandlers(io: Server) {
       'column:move',
       async (payload: { boardId: string; columnId: string; toIndex: number }) => {
         const { boardId, columnId, toIndex } = payload;
+        if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
           if (!board) return;
@@ -378,6 +387,7 @@ export function registerSocketHandlers(io: Server) {
       'chat:message',
       (payload: { boardId: string; text: string }) => {
         const { boardId, text: rawText } = payload;
+        if (!socket.rooms.has(boardId)) return;
         const text = sanitize(rawText);
         io.to(boardId).emit('chat:message', {
           username: socket.data.username as string,

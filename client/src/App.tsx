@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { IBoard } from './types';
 import Board from './components/Board';
 import BoardModal from './components/BoardModal';
 import NotificationTray from './components/NotificationTray';
+import VerificationBanner from './components/VerificationBanner';
+import VerifyEmail from './components/VerifyEmail';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import { resetSocket } from './socket';
 import { toast } from 'sonner';
 
@@ -24,6 +29,7 @@ function authHeaders() {
 
 export default function App() {
   const [username, setUsername] = useState<string>(() => localStorage.getItem('rtc-username') ?? '');
+  const [emailVerified, setEmailVerified] = useState<boolean>(true);
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [currentBoard, setCurrentBoard] = useState<IBoard | null>(null);
   const [newBoardTitle, setNewBoardTitle] = useState('');
@@ -43,6 +49,14 @@ export default function App() {
 
   useEffect(() => {
     if (username) fetchBoards();
+  }, [username]);
+
+  useEffect(() => {
+    if (!username) return;
+    fetch(`${API}/auth/me`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setEmailVerified(data.emailVerified); })
+      .catch(() => {});
   }, [username]);
 
   useEffect(() => {
@@ -108,6 +122,7 @@ export default function App() {
     localStorage.removeItem('rtc-username');
     resetSocket();
     setUsername('');
+    setEmailVerified(true);
     setCurrentBoard(null);
     setBoards([]);
   }
@@ -177,6 +192,11 @@ export default function App() {
   // ── Auth screen ─────────────────────────────────────────
   if (!username) {
     return (
+      <Routes>
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="*" element={
       <div className="flex flex-col items-center justify-center h-screen gap-6 bg-gray-100">
         <h1 className="text-4xl font-bold text-gray-800">RTC Kanban</h1>
 
@@ -270,9 +290,16 @@ export default function App() {
             >
               {loading ? '...' : mode === 'login' ? 'Login' : 'Create Account'}
             </button>
+            {mode === 'login' && (
+              <a href="/forgot-password" className="text-xs text-blue-500 hover:underline text-center">
+                Forgot password?
+              </a>
+            )}
           </form>
         </div>
       </div>
+        } />
+      </Routes>
     );
   }
 
@@ -344,6 +371,8 @@ export default function App() {
   }
 
   return (
+    <>
+      {!emailVerified && <VerificationBanner token={localStorage.getItem('rtc-token') ?? ''} />}
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Boards</h1>
@@ -428,5 +457,6 @@ export default function App() {
         </button>
       </div>
     </div>
+    </>
   );
 }
