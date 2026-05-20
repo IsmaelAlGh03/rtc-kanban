@@ -324,6 +324,24 @@ export default function App() {
     );
   }
 
+  // ── Account deletion ────────────────────────────────────
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  async function deleteAccount() {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/account`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) { toast.error('Failed to delete account'); return; }
+      logout();
+    } catch {
+      toast.error('Could not connect to the server');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
   // ── Board list ───────────────────────────────────────────
   const myBoards = boards.filter(b => b.owner === username);
   const sharedBoards = boards.filter(b => b.owner !== username);
@@ -381,6 +399,12 @@ export default function App() {
             Logged in as <strong className="text-gray-700">{username}</strong>
           </span>
           <NotificationTray onBoardsChange={fetchBoards} onNavigateToCard={navigateToCard} />
+          <button
+            onClick={() => { setShowDeleteAccount(true); setDeleteConfirmInput(''); }}
+            className="text-sm px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors bg-white"
+          >
+            Delete account
+          </button>
           <button
             onClick={logout}
             className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors bg-white"
@@ -457,6 +481,46 @@ export default function App() {
         </button>
       </div>
     </div>
+
+    {showDeleteAccount && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Delete account</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Your account will be permanently deleted. Boards you own with other members will be transferred to the next member — boards with no members will be deleted.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Type <span className="text-gray-800 font-bold">{username}</span> to confirm
+            </label>
+            <input
+              autoFocus
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+              value={deleteConfirmInput}
+              onChange={e => setDeleteConfirmInput(e.target.value)}
+              placeholder={username}
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setShowDeleteAccount(false)}
+              className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={deleteAccount}
+              disabled={deleteConfirmInput !== username || deleteLoading}
+              className="text-sm px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold transition-colors"
+            >
+              {deleteLoading ? 'Deleting…' : 'Delete my account'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }

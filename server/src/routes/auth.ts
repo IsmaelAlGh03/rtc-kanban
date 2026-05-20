@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { IBoard } from '../models/Board';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
@@ -193,7 +194,7 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
 });
 
 router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
-  const { token, password } = req.body;
+  const { token, newPassword: password } = req.body;
   if (!token || typeof token !== 'string') {
     res.status(400).json({ error: 'Reset token is required' });
     return;
@@ -222,6 +223,34 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
     { $set: { passwordHash }, $unset: { passwordResetToken: '', passwordResetExpires: '' } }
   );
   res.json({ message: 'Password reset successfully' });
+});
+
+router.delete('/account', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const username = req.username!;
+  const db = getDB();
+  try {
+    const ownedBoards = await db.collection<IBoard>('boards').find({ owner: username }).toArray();
+    for (const board of ownedBoards) {
+      if (board.members.length > 0) {
+        const [newOwner, ...remainingMembers] = board.members;
+        await db.collection('boards').updateOne(
+          { _id: board._id as any },
+          { $set: { owner: newOwner, members: remainingMembers } }
+        );
+      } else {
+        await db.collection('boards').deleteOne({ _id: board._id as any });
+      }
+    }
+    await db.collection('boards').updateMany(
+      { $or: [{ members: username }, { pendingInvites: username }] },
+      { $pull: { members: username, pendingInvites: username } as any }
+    );
+    await db.collection('notifications').deleteMany({ userId: username });
+    await db.collection('users').deleteOne({ username });
+    res.json({ message: 'Account deleted' });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
 });
 
 export default router;

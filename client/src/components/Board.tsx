@@ -54,6 +54,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
   const [activeCard, setActiveCard] = useState<ICard | null>(null);
   const [activeColumn, setActiveColumn] = useState<IColumn | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const cardOrigin = useRef<{ cardId: string; columnId: string } | null>(null);
   const disconnectToastId = useRef<string | number | null>(null);
 
@@ -112,7 +113,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
     toast.error('Card deleted');
   }
 
-  function updateCard(columnId: string, cardId: string, fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high' }) {
+  function updateCard(columnId: string, cardId: string, fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high'; dueDate?: string | null }) {
     getSocket().emit('card:update', { boardId: localBoard._id, columnId, cardId, ...fields });
   }
 
@@ -255,10 +256,21 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex items-center justify-between px-6 py-3 bg-gray-900 text-white shrink-0">
-        <h2 className="text-lg font-semibold">{localBoard.title}</h2>
+      <div className="flex items-center justify-between px-6 py-3 bg-gray-900 text-white shrink-0 gap-4">
+        <h2 className="text-lg font-semibold shrink-0">{localBoard.title}</h2>
+        <div className="relative flex-1 max-w-xs">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
+          <input
+            className="w-full bg-white/10 text-white placeholder-gray-400 text-sm rounded-lg pl-8 pr-3 py-1.5 outline-none focus:bg-white/20 transition-colors"
+            placeholder="Search cards…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
         <button
-          className="text-sm px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+          className="text-sm px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors shrink-0"
           onClick={onLeave}
         >
           ← Boards
@@ -287,15 +299,20 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
           >
             <SortableContext items={columns.map(c => c._id)} strategy={horizontalListSortingStrategy}>
               <div className="flex gap-4 p-4 overflow-x-auto flex-1 items-start">
-                {columns.map(col => (
+                {columns.map(col => {
+                  const displayCol = searchQuery.trim()
+                    ? { ...col, cards: col.cards.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase())) }
+                    : col;
+                  return (
                   <Column
                     key={col._id}
-                    column={col}
+                    column={displayCol}
                     onAddCard={addCard}
                     onDeleteCard={deleteCard}
                     onSelectCard={(cardId) => openCard(col._id, cardId)}
                   />
-                ))}
+                  );
+                })}
               </div>
             </SortableContext>
 
@@ -418,6 +435,18 @@ function Column({ column, onAddCard, onDeleteCard, onSelectCard }: {
   );
 }
 
+function dueDateLabel(dueDate: string): { label: string; className: string } {
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+  const label = due.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  if (diff < 0) return { label, className: 'bg-red-100 text-red-700' };
+  if (diff === 0) return { label: 'Today', className: 'bg-orange-100 text-orange-700' };
+  return { label, className: 'bg-gray-100 text-gray-500' };
+}
+
 function SortableCard({ card, columnId, onDelete, onSelect }: {
   card: ICard;
   columnId: string;
@@ -436,6 +465,8 @@ function SortableCard({ card, columnId, onDelete, onSelect }: {
     borderLeft: `3px solid ${URGENCY_BORDER[card.urgency ?? 'low']}`,
   };
 
+  const due = card.dueDate ? dueDateLabel(card.dueDate) : null;
+
   return (
     <div
       ref={setNodeRef}
@@ -449,6 +480,11 @@ function SortableCard({ card, columnId, onDelete, onSelect }: {
         <span className="text-sm leading-snug break-words">{card.title}</span>
         {card.assignedTo && (
           <span className="text-[11px] font-semibold text-gray-500">@{card.assignedTo}</span>
+        )}
+        {due && (
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded self-start mt-0.5 ${due.className}`}>
+            {due.label}
+          </span>
         )}
       </div>
       <button

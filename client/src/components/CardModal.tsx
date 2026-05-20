@@ -7,7 +7,7 @@ interface Props {
   username: string;
   members: string[];
   onClose: () => void;
-  onUpdate: (fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high' }) => void;
+  onUpdate: (fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high'; dueDate?: string | null }) => void;
   onAddComment: (text: string, mentions: string[]) => void;
 }
 
@@ -167,6 +167,27 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 w-24 shrink-0">Due date</span>
+            <div className="flex items-center gap-2 flex-1">
+              <input
+                type="date"
+                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                value={card.dueDate ? card.dueDate.slice(0, 10) : ''}
+                onChange={e => onUpdate({ dueDate: e.target.value || null })}
+              />
+              {card.dueDate && (
+                <button
+                  onClick={() => onUpdate({ dueDate: null })}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                  title="Clear due date"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         </div>

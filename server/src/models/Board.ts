@@ -14,6 +14,7 @@ export interface ICard {
   addedBy: string;
   assignedTo?: string;
   urgency: 'low' | 'medium' | 'high';
+  dueDate?: Date;
   comments: IComment[];
 }
 

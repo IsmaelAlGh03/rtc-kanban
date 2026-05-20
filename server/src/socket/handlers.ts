@@ -213,8 +213,9 @@ export function registerSocketHandlers(io: Server) {
         description?: string;
         assignedTo?: string;
         urgency?: 'low' | 'medium' | 'high';
+        dueDate?: string | null;
       }) => {
-        const { boardId, columnId, cardId, title: rawTitle, description: rawDescription, assignedTo, urgency } = payload;
+        const { boardId, columnId, cardId, title: rawTitle, description: rawDescription, assignedTo, urgency, dueDate } = payload;
         if (!socket.rooms.has(boardId)) { socket.emit('board:error', 'Access denied'); return; }
         try {
           const board = await boards().findOne({ _id: new ObjectId(boardId) as any });
@@ -231,6 +232,7 @@ export function registerSocketHandlers(io: Server) {
           if (rawDescription !== undefined) card.description = sanitize(rawDescription);
           if (assignedTo !== undefined) card.assignedTo = assignedTo;
           if (urgency !== undefined) card.urgency = urgency;
+          if (dueDate !== undefined) card.dueDate = dueDate ? new Date(dueDate) : undefined;
 
           const now = new Date();
           await boards().updateOne(
