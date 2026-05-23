@@ -8,8 +8,10 @@ import VerificationBanner from './components/VerificationBanner';
 import VerifyEmail from './components/VerifyEmail';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import ProfilePage from './components/ProfilePage';
 import { resetSocket } from './socket';
 import { toast } from 'sonner';
+import { gravatarUrl } from './utils/gravatar';
 
 const API = 'http://localhost:4000/api';
 
@@ -29,6 +31,10 @@ function authHeaders() {
 
 export default function App() {
   const [username, setUsername] = useState<string>(() => localStorage.getItem('rtc-username') ?? '');
+  const [displayName, setDisplayName] = useState<string>('');
+  const [gravatarHash, setGravatarHash] = useState<string>('');
+  const [bio, setBio] = useState<string>('');
+  const [showProfile, setShowProfile] = useState(false);
   const [emailVerified, setEmailVerified] = useState<boolean>(true);
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [currentBoard, setCurrentBoard] = useState<IBoard | null>(null);
@@ -62,7 +68,14 @@ export default function App() {
     if (!username) return;
     fetch(`${API}/auth/me`, { headers: authHeaders() })
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setEmailVerified(data.emailVerified); })
+      .then(data => {
+        if (data) {
+          setEmailVerified(data.emailVerified);
+          setDisplayName(data.displayName ?? username);
+          setGravatarHash(data.gravatarHash ?? '');
+          setBio(data.bio ?? '');
+        }
+      })
       .catch(() => {});
   }, [username]);
 
@@ -129,6 +142,9 @@ export default function App() {
     localStorage.removeItem('rtc-username');
     resetSocket();
     setUsername('');
+    setDisplayName('');
+    setGravatarHash('');
+    setBio('');
     setEmailVerified(true);
     setCurrentBoard(null);
     setBoards([]);
@@ -206,19 +222,19 @@ export default function App() {
     return (
       <Routes>
         <Route path="*" element={
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gray-100 px-4">
-        <h1 className="text-4xl font-bold text-gray-800">RTC Kanban</h1>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-[#0d0f1a] px-4">
+        <h1 className="text-4xl font-bold text-slate-100">RTC Kanban</h1>
 
-        <div className="bg-white rounded-2xl shadow-md w-full max-w-sm p-8 flex flex-col gap-5">
-          <div className="flex rounded-lg overflow-hidden border border-gray-200">
+        <div className="bg-[#1a1d30] border border-white/[0.07] rounded-2xl shadow-xl w-full max-w-sm p-8 flex flex-col gap-5">
+          <div className="flex rounded-lg overflow-hidden border border-white/[0.09]">
             <button
-              className={`flex-1 py-2 text-sm font-semibold transition-colors ${mode === 'login' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+              className={`flex-1 py-2 text-sm font-semibold transition-colors ${mode === 'login' ? 'bg-rose-500 text-white' : 'bg-transparent text-white/40 hover:bg-white/[0.05]'}`}
               onClick={() => { setMode('login'); setAuthError(''); setAuthSuccess(''); setEmailInput(''); }}
             >
               Login
             </button>
             <button
-              className={`flex-1 py-2 text-sm font-semibold transition-colors ${mode === 'register' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+              className={`flex-1 py-2 text-sm font-semibold transition-colors ${mode === 'register' ? 'bg-rose-500 text-white' : 'bg-transparent text-white/40 hover:bg-white/[0.05]'}`}
               onClick={() => { setMode('register'); setAuthError(''); setAuthSuccess(''); }}
             >
               Register
@@ -227,13 +243,13 @@ export default function App() {
 
           <form className="flex flex-col gap-3" onSubmit={submitAuth}>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="text-xs font-semibold text-white/35 uppercase tracking-wide">
                 {mode === 'login' ? 'Username or Email' : 'Username'}
               </label>
               <input
                 autoFocus
                 autoComplete="username"
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25"
                 value={nameInput}
                 onChange={e => setNameInput(e.target.value)}
                 placeholder={mode === 'login' ? 'Username or email' : 'Your username'}
@@ -242,11 +258,11 @@ export default function App() {
 
             {mode === 'register' && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                <label className="text-xs font-semibold text-white/35 uppercase tracking-wide">Email</label>
                 <input
                   type="email"
                   autoComplete="email"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25"
                   value={emailInput}
                   onChange={e => setEmailInput(e.target.value)}
                   placeholder="you@example.com"
@@ -255,11 +271,11 @@ export default function App() {
             )}
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Password</label>
+              <label className="text-xs font-semibold text-white/35 uppercase tracking-wide">Password</label>
               <input
                 type="password"
                 autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25"
                 value={passwordInput}
                 onChange={e => setPasswordInput(e.target.value)}
                 placeholder="Your password"
@@ -272,7 +288,7 @@ export default function App() {
                     { label: 'Number', ok: /[0-9]/.test(passwordInput) },
                     { label: 'Special character', ok: /[^A-Za-z0-9]/.test(passwordInput) },
                   ].map(({ label, ok }) => (
-                    <li key={label} className={`text-xs flex items-center gap-1.5 ${ok ? 'text-green-600' : 'text-gray-400'}`}>
+                    <li key={label} className={`text-xs flex items-center gap-1.5 ${ok ? 'text-emerald-400' : 'text-white/30'}`}>
                       <span>{ok ? '✓' : '○'}</span>
                       {label}
                     </li>
@@ -282,12 +298,12 @@ export default function App() {
             </div>
 
             {authError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/25 rounded-lg px-3 py-2">
                 {authError}
               </p>
             )}
             {authSuccess && (
-              <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <p className="text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-lg px-3 py-2">
                 {authSuccess}
               </p>
             )}
@@ -295,12 +311,12 @@ export default function App() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-1"
+              className="bg-rose-500 hover:bg-rose-600 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-1"
             >
               {loading ? '...' : mode === 'login' ? 'Login' : 'Create Account'}
             </button>
             {mode === 'login' && (
-              <a href="/forgot-password" className="text-xs text-blue-500 hover:underline text-center">
+              <a href="/forgot-password" className="text-xs text-rose-400 hover:underline text-center">
                 Forgot password?
               </a>
             )}
@@ -360,11 +376,11 @@ export default function App() {
     return (
       <div
         key={b._id}
-        className={`relative group rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer ${!isOwned ? 'border-2 border-dashed border-gray-300' : ''}`}
-        style={{ backgroundColor: bg ?? '#ffffff' }}
+        className={`relative group rounded-xl p-6 hover:-translate-y-0.5 transition-all cursor-pointer ${!bg ? 'bg-[#1a1d30] border border-white/[0.07]' : ''} ${!isOwned && !bg ? 'border-dashed' : ''}`}
+        style={bg ? { backgroundColor: bg } : undefined}
         onClick={() => { setPendingCard(null); setCurrentBoard(b); }}
       >
-        <p className={`font-semibold ${textColor}`}>{b.title}</p>
+        <p className={`font-semibold ${bg ? textColor : 'text-slate-100'}`}>{b.title}</p>
         {b.description && (
           <p className={`text-xs mt-1 line-clamp-2 ${bg ? (light ? 'text-gray-600' : 'text-white/70') : 'text-gray-500'}`}>
             {b.description}
@@ -395,23 +411,41 @@ export default function App() {
   return (
     <>
       {!emailVerified && <VerificationBanner token={localStorage.getItem('rtc-token') ?? ''} />}
+    <div className="min-h-screen bg-[#0d0f1a]">
     <div className="p-4 sm:p-8 max-w-4xl mx-auto">
       <div className="flex items-center flex-wrap gap-3 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Boards</h1>
+        <h1 className="text-3xl font-bold text-slate-100">Boards</h1>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">
-            Logged in as <strong className="text-gray-700">{username}</strong>
-          </span>
+          <button
+            onClick={() => setShowProfile(true)}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            title="View profile"
+          >
+            {gravatarHash ? (
+              <img
+                src={gravatarUrl(gravatarHash, 32)}
+                alt={displayName || username}
+                className="w-8 h-8 rounded-full ring-1 ring-white/20"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs text-white/40">
+                {username[0]?.toUpperCase()}
+              </div>
+            )}
+            <span className="text-sm text-white/40 hidden sm:inline">
+              <strong className="text-slate-200">{displayName || username}</strong>
+            </span>
+          </button>
           <NotificationTray onBoardsChange={fetchBoards} onNavigateToCard={navigateToCard} />
           <button
             onClick={() => { setShowDeleteAccount(true); setDeleteConfirmInput(''); }}
-            className="text-sm px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors bg-white"
+            className="text-sm px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
           >
             Delete account
           </button>
           <button
             onClick={logout}
-            className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors bg-white"
+            className="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:bg-white/[0.05] transition-colors"
           >
             Logout
           </button>
@@ -419,7 +453,7 @@ export default function App() {
       </div>
 
       <section className="mb-8">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">My Boards</h2>
+        <h2 className="text-sm font-semibold text-white/30 uppercase tracking-wide mb-3">My Boards</h2>
         {boardsLoading ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -429,10 +463,10 @@ export default function App() {
         ) : myBoards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <span className="text-4xl mb-3">📋</span>
-            <p className="font-semibold text-gray-700 mb-1">No boards yet</p>
-            <p className="text-sm text-gray-400 mb-4">Create your first board to get started</p>
+            <p className="font-semibold text-slate-300 mb-1">No boards yet</p>
+            <p className="text-sm text-white/30 mb-4">Create your first board to get started</p>
             <button
-              className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+              className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
               onClick={() => newBoardInputRef.current?.focus()}
             >
               + Create Board
@@ -447,7 +481,7 @@ export default function App() {
 
       {sharedBoards.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Shared with me</h2>
+          <h2 className="text-sm font-semibold text-white/30 uppercase tracking-wide mb-3">Shared with me</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             {sharedBoards.map(renderBoardCard)}
           </div>
@@ -471,37 +505,52 @@ export default function App() {
       <div className="flex gap-2 max-w-sm">
         <input
           ref={newBoardInputRef}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 flex-1"
+          className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25 flex-1"
           value={newBoardTitle}
           onChange={e => setNewBoardTitle(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && createBoard()}
           placeholder="New board title..."
         />
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          className="bg-rose-500 hover:bg-rose-600 text-white text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           onClick={createBoard}
         >
           Create Board
         </button>
       </div>
     </div>
+    </div>
+
+    {showProfile && (
+      <ProfilePage
+        username={username}
+        displayName={displayName || username}
+        bio={bio}
+        gravatarHash={gravatarHash}
+        onClose={() => setShowProfile(false)}
+        onSave={(newDisplayName, newBio) => {
+          setDisplayName(newDisplayName);
+          setBio(newBio);
+        }}
+      />
+    )}
 
     {showDeleteAccount && (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div className="bg-[#1a1d30] border border-white/[0.07] rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Delete account</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 className="text-lg font-semibold text-slate-100">Delete account</h2>
+            <p className="text-sm text-white/40 mt-1">
               Your account will be permanently deleted. Boards you own with other members will be transferred to the next member — boards with no members will be deleted.
             </p>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Type <span className="text-gray-800 font-bold">{username}</span> to confirm
+            <label className="text-xs font-semibold text-white/35 uppercase tracking-wide">
+              Type <span className="text-slate-200 font-bold">{username}</span> to confirm
             </label>
             <input
               autoFocus
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+              className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25"
               value={deleteConfirmInput}
               onChange={e => setDeleteConfirmInput(e.target.value)}
               placeholder={username}
@@ -510,14 +559,14 @@ export default function App() {
           <div className="flex gap-2 justify-end">
             <button
               onClick={() => setShowDeleteAccount(false)}
-              className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+              className="text-sm px-4 py-2 rounded-lg border border-white/10 text-white/50 hover:bg-white/[0.05] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={deleteAccount}
               disabled={deleteConfirmInput !== username || deleteLoading}
-              className="text-sm px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold transition-colors"
+              className="text-sm px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold transition-colors"
             >
               {deleteLoading ? 'Deleting…' : 'Delete my account'}
             </button>

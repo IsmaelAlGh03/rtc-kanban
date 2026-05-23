@@ -23,4 +23,24 @@ router.get('/search', async (req: AuthRequest, res: Response) => {
   }
 });
 
+router.get('/:username', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await getDB()
+      .collection('users')
+      .findOne(
+        { username: req.params.username },
+        { projection: { username: 1, displayName: 1, bio: 1, gravatarHash: 1, _id: 0 } }
+      );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({
+      username: user.username,
+      displayName: user.displayName ?? user.username,
+      bio: user.bio ?? '',
+      gravatarHash: user.gravatarHash ?? '',
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
 export default router;

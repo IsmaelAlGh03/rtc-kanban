@@ -72,3 +72,4 @@ cache/
 .dirty
 
 .codegraph/
+.playwright-mcp

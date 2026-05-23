@@ -80,6 +80,7 @@ router.post('/register', registerLimiter, async (req: Request, res: Response): P
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
+  const gravatarHash = crypto.createHash('md5').update(normalizedEmail).digest('hex');
 
   const verifyToken = crypto.randomBytes(32).toString('hex');
   const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
@@ -88,6 +89,7 @@ router.post('/register', registerLimiter, async (req: Request, res: Response): P
     username: name,
     email: normalizedEmail,
     passwordHash,
+    gravatarHash,
     emailVerified: false,
     emailVerificationToken: verifyToken,
     emailVerificationExpires: tokenExpiry,
@@ -125,7 +127,44 @@ router.post('/login', loginLimiter, async (req: Request, res: Response): Promise
 router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   const user = await getDB().collection('users').findOne({ username: req.username });
   if (!user) { res.status(404).json({ error: 'User not found' }); return; }
-  res.json({ username: user.username, emailVerified: user.emailVerified ?? false });
+  res.json({
+    username: user.username,
+    emailVerified: user.emailVerified ?? false,
+    displayName: user.displayName ?? user.username,
+    bio: user.bio ?? '',
+    gravatarHash: user.gravatarHash ?? '',
+  });
+});
+
+router.patch('/profile', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { displayName, bio } = req.body;
+  const update: Record<string, string> = {};
+
+  if (displayName !== undefined) {
+    const trimmed = String(displayName).trim();
+    if (trimmed.length > 50) {
+      res.status(400).json({ error: 'Display name must be 50 characters or fewer' });
+      return;
+    }
+    update.displayName = trimmed;
+  }
+
+  if (bio !== undefined) {
+    const trimmed = String(bio).trim();
+    if (trimmed.length > 200) {
+      res.status(400).json({ error: 'Bio must be 200 characters or fewer' });
+      return;
+    }
+    update.bio = trimmed;
+  }
+
+  if (Object.keys(update).length === 0) {
+    res.status(400).json({ error: 'Nothing to update' });
+    return;
+  }
+
+  await getDB().collection('users').updateOne({ username: req.username }, { $set: update });
+  res.json({ message: 'Profile updated' });
 });
 
 router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {

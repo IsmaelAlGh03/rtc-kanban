@@ -2,6 +2,11 @@ import { useState } from 'react';
 
 const API = 'http://localhost:4000/api';
 
+const pageCls = 'flex flex-col items-center justify-center min-h-screen gap-6 bg-[#0d0f1a] px-4';
+const cardCls = 'bg-[#1a1d30] border border-white/[0.07] rounded-2xl shadow-xl w-full max-w-sm p-8 flex flex-col gap-5';
+const inputCls = 'border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25 w-full';
+const labelCls = 'text-xs font-semibold text-white/35 uppercase tracking-wide';
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,22 +39,22 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gray-100 px-4">
-      <h1 className="text-4xl font-bold text-gray-800">RTC Kanban</h1>
-      <div className="bg-white rounded-2xl shadow-md w-full max-w-sm p-8 flex flex-col gap-5">
+    <div className={pageCls}>
+      <h1 className="text-4xl font-bold text-slate-100">RTC Kanban</h1>
+      <div className={cardCls}>
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Reset your password</h2>
-          <p className="text-sm text-gray-500 mt-1">Enter your email and we'll send you a reset link.</p>
+          <h2 className="text-lg font-semibold text-slate-100">Reset your password</h2>
+          <p className="text-sm text-white/40 mt-1">Enter your email and we'll send you a reset link.</p>
         </div>
 
         <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+            <label className={labelCls}>Email</label>
             <input
               autoFocus
               type="email"
               autoComplete="email"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className={inputCls}
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -58,22 +63,22 @@ export default function ForgotPassword() {
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/25 rounded-lg px-3 py-2">{error}</p>
           )}
           {success && (
-            <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{success}</p>
+            <p className="text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-lg px-3 py-2">{success}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-1"
+            className="bg-rose-500 hover:bg-rose-600 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-1"
           >
             {loading ? '…' : 'Send reset link'}
           </button>
         </form>
 
-        <a href="/" className="text-sm text-blue-500 hover:underline text-center">Back to login</a>
+        <a href="/" className="text-sm text-rose-400 hover:underline text-center">Back to login</a>
       </div>
     </div>
   );

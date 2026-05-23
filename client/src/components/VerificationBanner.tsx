@@ -26,20 +26,20 @@ export default function VerificationBanner({ token }: Props) {
   }
 
   return (
-    <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2.5 flex items-center justify-between gap-4 text-sm">
-      <p className="text-yellow-800">
+    <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 flex items-center justify-between gap-4 text-sm">
+      <p className="text-amber-300">
         <strong>Verify your email</strong> — check your inbox for a confirmation link.
       </p>
       <div className="shrink-0">
         {status === 'idle' && (
-          <button onClick={resend} className="text-yellow-700 underline hover:text-yellow-900 font-medium">
+          <button onClick={resend} className="text-amber-400 underline hover:text-amber-200 font-medium">
             Resend email
           </button>
         )}
-        {status === 'sending' && <span className="text-yellow-600">Sending…</span>}
-        {status === 'sent' && <span className="text-green-700 font-medium">Sent!</span>}
+        {status === 'sending' && <span className="text-amber-400/60">Sending…</span>}
+        {status === 'sent' && <span className="text-emerald-400 font-medium">Sent!</span>}
         {status === 'error' && (
-          <button onClick={resend} className="text-red-600 underline hover:text-red-800 font-medium">
+          <button onClick={resend} className="text-rose-400 underline hover:text-rose-300 font-medium">
             Failed — try again
           </button>
         )}
