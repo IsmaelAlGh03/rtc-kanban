@@ -9,7 +9,7 @@ interface Props {
   username: string;
   members: string[];
   onClose: () => void;
-  onUpdate: (fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high'; dueDate?: string | null }) => void;
+  onUpdate: (fields: { title?: string; description?: string; assignedTo?: string; urgency?: 'low' | 'medium' | 'high'; dueDate?: string | null }) => void;
   onAddComment: (text: string, mentions: string[]) => void;
 }
 
@@ -24,6 +24,8 @@ const inputCls = 'w-full bg-white/[0.06] border border-white/10 rounded-lg px-2.
 export default function CardModal({ card, username, members, onClose, onUpdate, onAddComment }: Props) {
   const assigneeProfile = useProfile(card.assignedTo ?? '');
   const addedByProfile = useProfile(card.addedBy ?? '');
+  const [titleInput, setTitleInput] = useState(card.title);
+  const [descInput, setDescInput] = useState(card.description ?? '');
   const [assignedInput, setAssignedInput] = useState(card.assignedTo ?? '');
   const [focused, setFocused] = useState(false);
   const [commentInput, setCommentInput] = useState('');
@@ -45,6 +47,8 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
   }
   const commentsBottomRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => { setTitleInput(card.title); }, [card.title]);
+  useEffect(() => { setDescInput(card.description ?? ''); }, [card.description]);
   useEffect(() => {
     setAssignedInput(card.assignedTo ?? '');
   }, [card.assignedTo]);
@@ -111,7 +115,18 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-white/[0.08] shrink-0">
-          <h2 className="text-base font-bold text-slate-100 leading-snug flex-1">{card.title}</h2>
+          <input
+            className="flex-1 bg-transparent text-base font-bold text-slate-100 leading-snug outline-none border-b border-transparent focus:border-rose-400 focus:ring-0 placeholder-white/25 min-w-0 pb-0.5 transition-colors"
+            value={titleInput}
+            onChange={e => setTitleInput(e.target.value)}
+            onBlur={() => {
+              const val = titleInput.trim();
+              if (val && val !== card.title) onUpdate({ title: val });
+              else if (!val) setTitleInput(card.title);
+            }}
+            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            placeholder="Card title"
+          />
           <button
             className="text-white/35 hover:text-white/70 text-2xl leading-none bg-transparent border-0 cursor-pointer transition-colors shrink-0"
             onClick={onClose}
@@ -204,6 +219,21 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
               )}
             </div>
           </div>
+        </div>
+
+        {/* Description */}
+        <div className="px-5 py-4 border-b border-white/[0.08] shrink-0 flex flex-col gap-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-white/35">Description</span>
+          <textarea
+            className={`${inputCls} resize-none min-h-[64px]`}
+            value={descInput}
+            onChange={e => setDescInput(e.target.value)}
+            onBlur={() => {
+              if (descInput !== (card.description ?? '')) onUpdate({ description: descInput });
+            }}
+            placeholder="Add a description…"
+            rows={3}
+          />
         </div>
 
         {/* Comments */}

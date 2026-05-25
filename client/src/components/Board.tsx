@@ -133,7 +133,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
     toast.error('Card deleted');
   }
 
-  function updateCard(columnId: string, cardId: string, fields: { assignedTo?: string; urgency?: 'low' | 'medium' | 'high'; dueDate?: string | null }) {
+  function updateCard(columnId: string, cardId: string, fields: { title?: string; description?: string; assignedTo?: string; urgency?: 'low' | 'medium' | 'high'; dueDate?: string | null }) {
     getSocket().emit('card:update', { boardId: localBoard._id, columnId, cardId, ...fields });
   }
 
