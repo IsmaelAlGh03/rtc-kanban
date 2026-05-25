@@ -459,6 +459,7 @@ function Column({ column, onAddCard, onDeleteCard, onSelectCard }: {
                 key={card._id}
                 card={card}
                 columnId={column._id}
+                isDone={column.title.toLowerCase() === 'done'}
                 onDelete={() => onDeleteCard(column._id, card._id)}
                 onSelect={() => onSelectCard(card._id)}
               />
@@ -498,9 +499,12 @@ function dueDateLabel(dueDate: string): { label: string; className: string } {
   return { label, className: 'bg-white/[0.08] text-white/35' };
 }
 
-function SortableCard({ card, columnId, onDelete, onSelect }: {
+const DONE_STRIP = { color: '#2e3150', bg: '#181b2a', shadow: 'none' };
+
+function SortableCard({ card, columnId, isDone = false, onDelete, onSelect }: {
   card: ICard;
   columnId: string;
+  isDone?: boolean;
   onDelete: () => void;
   onSelect: () => void;
 }) {
@@ -509,13 +513,13 @@ function SortableCard({ card, columnId, onDelete, onSelect }: {
     data: { type: 'card', card, columnId },
   });
 
-  const strip = URGENCY_STRIP[card.urgency ?? 'low'];
+  const strip = isDone ? DONE_STRIP : URGENCY_STRIP[card.urgency ?? 'low'];
   const due = card.dueDate ? dueDateLabel(card.dueDate) : null;
 
   const wrapperStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.3 : 1,
+    opacity: isDragging ? 0.3 : isDone ? 0.55 : 1,
     background: strip.bg,
   };
 
@@ -533,11 +537,15 @@ function SortableCard({ card, columnId, onDelete, onSelect }: {
         style={{ background: strip.color, boxShadow: strip.shadow }}
       />
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <span className="text-sm leading-snug break-words text-slate-200">{card.title}</span>
+        <span className={`text-sm leading-snug break-words ${isDone ? 'line-through text-white/30' : 'text-slate-200'}`}>
+          {card.title}
+        </span>
         {card.assignedTo && (
-          <span className="text-[11px] font-semibold text-white/40">@{card.assignedTo}</span>
+          <span className={`text-[11px] font-semibold ${isDone ? 'text-white/20' : 'text-white/40'}`}>
+            @{card.assignedTo}
+          </span>
         )}
-        {due && (
+        {due && !isDone && (
           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded self-start mt-0.5 ${due.className}`}>
             {due.label}
           </span>
