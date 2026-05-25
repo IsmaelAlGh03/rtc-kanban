@@ -130,17 +130,17 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#1a1d30] rounded-2xl shadow-2xl border border-white/[0.07] w-full max-w-md p-6 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-800">Edit Board</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <h2 className="text-lg font-bold text-slate-100">Edit Board</h2>
+          <button onClick={onClose} className="text-white/40 hover:text-white/80 text-xl leading-none transition-colors">&times;</button>
         </div>
 
         {/* Name */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</label>
+          <label className="text-xs font-semibold text-white/40 uppercase tracking-wide">Name</label>
           <input
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25"
             value={title}
             onChange={e => setTitle(e.target.value)}
           />
@@ -148,9 +148,9 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
 
         {/* Description */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</label>
+          <label className="text-xs font-semibold text-white/40 uppercase tracking-wide">Description</label>
           <textarea
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
+            className="border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25 resize-none"
             rows={3}
             placeholder="What is this board for?"
             value={description}
@@ -160,21 +160,21 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
 
         {/* Color palette */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Color</label>
+          <label className="text-xs font-semibold text-white/40 uppercase tracking-wide">Color</label>
           <div className="grid grid-cols-8 gap-2">
             <button
               onClick={() => setColor('')}
               title="No color"
-              className={`w-7 h-7 rounded-full border-2 bg-white flex items-center justify-center ${color === '' ? 'border-blue-500' : 'border-gray-300'}`}
+              className={`w-7 h-7 rounded-full border-2 bg-white/[0.08] flex items-center justify-center ${color === '' ? 'border-rose-500' : 'border-white/20'}`}
             >
-              <span className="text-gray-400 text-xs">✕</span>
+              <span className="text-white/40 text-xs">✕</span>
             </button>
             {PALETTE.map(c => (
               <button
                 key={c}
                 onClick={() => setColor(c)}
                 style={{ backgroundColor: c }}
-                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${color === c ? 'border-blue-500 scale-110' : 'border-transparent'} transition-transform`}
+                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${color === c ? 'border-rose-400 scale-110' : 'border-transparent'} transition-transform`}
               >
                 {color === c && (
                   <span style={{ color: isLight(c) ? '#1f2937' : '#ffffff' }} className="text-xs font-bold">✓</span>
@@ -186,28 +186,28 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
 
         {/* Share */}
         {isOwner && (
-          <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Share</label>
+          <div className="flex flex-col gap-3 border-t border-white/[0.07] pt-4">
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-wide">Share</label>
 
             {/* Search */}
             <div className="relative">
               <input
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 bg-white/[0.06] text-slate-100 placeholder-white/25"
                 placeholder="Search by username or email..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
               {searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-10 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1d30] border border-white/[0.08] rounded-lg shadow-xl z-10 overflow-hidden">
                   {searchResults.map(u => (
                     <button
                       key={u}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors flex items-center justify-between"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors flex items-center justify-between text-slate-200"
                       onClick={() => !pendingInvites.includes(u) && addMember(u)}
                     >
                       <span>{u}</span>
                       {pendingInvites.includes(u) && (
-                        <span className="text-xs text-amber-500 font-semibold">Pending</span>
+                        <span className="text-xs text-amber-400 font-semibold">Pending</span>
                       )}
                     </button>
                   ))}
@@ -219,10 +219,10 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
             {members.length > 0 && (
               <div className="flex flex-col gap-1">
                 {members.map(m => (
-                  <div key={m} className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700">{m}</span>
+                  <div key={m} className="flex items-center justify-between px-3 py-1.5 bg-white/[0.04] rounded-lg border border-white/[0.05]">
+                    <span className="text-sm text-slate-200">{m}</span>
                     <button
-                      className="text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
+                      className="text-white/30 hover:text-rose-400 transition-colors text-lg leading-none"
                       onClick={() => removeMember(m)}
                     >
                       ×
@@ -235,11 +235,11 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
             {/* Pending invites */}
             {pendingInvites.length > 0 && (
               <div className="flex flex-col gap-1">
-                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Pending invites</p>
+                <p className="text-xs text-white/40 font-semibold uppercase tracking-wide">Pending invites</p>
                 {pendingInvites.map(u => (
-                  <div key={u} className="flex items-center justify-between px-3 py-1.5 bg-amber-50 rounded-lg">
-                    <span className="text-sm text-gray-700">{u}</span>
-                    <span className="text-xs text-amber-500 font-semibold">Pending</span>
+                  <div key={u} className="flex items-center justify-between px-3 py-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                    <span className="text-sm text-slate-200">{u}</span>
+                    <span className="text-xs text-amber-400 font-semibold">Pending</span>
                   </div>
                 ))}
               </div>
@@ -251,12 +251,12 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
                 <div className="flex gap-2">
                   <input
                     readOnly
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 bg-gray-50 outline-none"
+                    className="flex-1 border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/40 bg-white/[0.04] outline-none"
                     value={inviteLink}
                   />
                   <button
                     onClick={copyLink}
-                    className="text-xs px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors whitespace-nowrap"
+                    className="text-xs px-3 py-2 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-slate-200 transition-colors whitespace-nowrap active:scale-[0.97]"
                   >
                     {copied ? 'Copied!' : 'Copy'}
                   </button>
@@ -265,7 +265,7 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
               <button
                 onClick={generateLink}
                 disabled={generatingLink}
-                className="text-xs text-blue-500 hover:text-blue-700 transition-colors text-left"
+                className="text-xs text-rose-400 hover:text-rose-300 transition-colors text-left"
               >
                 {generatingLink ? 'Generating...' : inviteLink ? 'Regenerate link' : 'Generate invite link'}
               </button>
@@ -274,14 +274,14 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-1 border-t border-white/[0.07]">
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className={`text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+            className={`text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors active:scale-[0.97] ${
               deleteStep === 'confirm'
                 ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'text-red-500 hover:bg-red-50'
+                : 'text-red-400 hover:bg-red-500/10'
             }`}
           >
             {deleting ? 'Deleting...' : deleteStep === 'confirm' ? 'Are you sure?' : 'Delete Board'}
@@ -290,14 +290,14 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+              className="text-sm px-3 py-1.5 rounded-lg border border-white/[0.10] text-white/60 hover:bg-white/[0.06] transition-colors active:scale-[0.97]"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving || !title.trim()}
-              className="text-sm px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold transition-colors"
+              className="text-sm px-4 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white font-semibold transition-colors active:scale-[0.97]"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>

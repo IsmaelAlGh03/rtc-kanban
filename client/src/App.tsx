@@ -311,7 +311,7 @@ export default function App() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-rose-500 hover:bg-rose-600 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-1"
+              className="bg-rose-500 hover:bg-rose-600 active:scale-[0.98] disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-all mt-1"
             >
               {loading ? '...' : mode === 'login' ? 'Login' : 'Create Account'}
             </button>
@@ -387,7 +387,7 @@ export default function App() {
           </p>
         )}
         {!isOwned && (
-          <p className={`text-[11px] mt-2 ${bg ? (light ? 'text-gray-500' : 'text-white/60') : 'text-gray-400'}`}>
+          <p className={`text-xs mt-2 ${bg ? (light ? 'text-gray-500' : 'text-white/60') : 'text-gray-400'}`}>
             by {b.owner}
           </p>
         )}
@@ -466,7 +466,7 @@ export default function App() {
             <p className="font-semibold text-slate-300 mb-1">No boards yet</p>
             <p className="text-sm text-white/30 mb-4">Create your first board to get started</p>
             <button
-              className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+              className="bg-rose-500 hover:bg-rose-600 active:scale-[0.97] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
               onClick={() => newBoardInputRef.current?.focus()}
             >
               + Create Board
@@ -481,7 +481,7 @@ export default function App() {
 
       {sharedBoards.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-white/30 uppercase tracking-wide mb-3">Shared with me</h2>
+          <h2 className="text-sm font-semibold text-indigo-400/60 uppercase tracking-wide mb-3">Shared with me</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             {sharedBoards.map(renderBoardCard)}
           </div>
@@ -512,7 +512,7 @@ export default function App() {
           placeholder="New board title..."
         />
         <button
-          className="bg-rose-500 hover:bg-rose-600 text-white text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          className="bg-rose-500 hover:bg-rose-600 active:scale-[0.97] text-white text-sm px-4 py-2 rounded-lg transition-all whitespace-nowrap"
           onClick={createBoard}
         >
           Create Board
@@ -566,7 +566,7 @@ export default function App() {
             <button
               onClick={deleteAccount}
               disabled={deleteConfirmInput !== username || deleteLoading}
-              className="text-sm px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold transition-colors"
+              className="text-sm px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-[0.97] disabled:opacity-50 text-white font-semibold transition-all"
             >
               {deleteLoading ? 'Deleting…' : 'Delete my account'}
             </button>

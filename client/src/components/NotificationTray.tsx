@@ -95,7 +95,7 @@ export default function NotificationTray({ onBoardsChange, onNavigateToCard }: P
     <div className="relative" ref={ref}>
       <button
         onClick={toggleOpen}
-        className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
+        className="relative p-2 rounded-lg hover:bg-white/[0.08] transition-colors text-white/60 hover:text-slate-100"
         title="Notifications"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -109,36 +109,36 @@ export default function NotificationTray({ onBoardsChange, onNavigateToCard }: P
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+        <div className="absolute right-0 top-full mt-2 w-80 bg-[#1a1d30] rounded-xl shadow-2xl border border-white/[0.08] z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.07]">
+            <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">No notifications</p>
+              <p className="text-sm text-white/40 text-center py-8">No notifications</p>
             ) : (
               notifications.map(n => (
                 <div
                   key={n._id}
-                  className={`px-4 py-3 border-b border-gray-50 last:border-0 ${!n.read ? 'bg-blue-50/50' : ''} ${(n.type === 'assigned' || n.type === 'mentioned') ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
+                  className={`px-4 py-3 border-b border-white/[0.05] last:border-0 ${!n.read ? 'bg-indigo-500/10' : ''} ${(n.type === 'assigned' || n.type === 'mentioned') ? 'cursor-pointer hover:bg-white/[0.04] transition-colors' : ''}`}
                   onClick={(n.type === 'assigned' || n.type === 'mentioned') ? () => handleAssignedClick(n) : undefined}
                 >
-                  <p className="text-sm text-gray-700 leading-snug">{label(n)}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-sm text-slate-200 leading-snug">{label(n)}</p>
+                  <p className="text-[11px] text-white/40 mt-1">
                     {new Date(n.createdAt).toLocaleDateString()}
                   </p>
                   {n.type === 'invite' && (
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => accept(n)}
-                        className="text-xs px-3 py-1 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
+                        className="text-xs px-3 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold transition-colors active:scale-[0.97]"
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => reject(n)}
-                        className="text-xs px-3 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                        className="text-xs px-3 py-1 rounded-lg border border-white/[0.12] text-white/60 hover:bg-white/[0.06] transition-colors active:scale-[0.97]"
                       >
                         Decline
                       </button>

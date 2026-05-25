@@ -38,7 +38,7 @@ export default function Chat({ messages, username, onSend, onClose }: Props) {
 
   return (
     <div className="w-[300px] min-w-[300px] bg-[#1a1d30] border-l border-white/[0.07] flex flex-col">
-      <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/40 border-b border-white/[0.07] shrink-0 flex items-center justify-between">
+      <div className="px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 border-b border-white/[0.07] shrink-0 flex items-center justify-between">
         Chat
         {onClose && (
           <button onClick={onClose} className="text-white/30 hover:text-white/60 text-lg leading-none transition-colors">×</button>
@@ -60,7 +60,7 @@ export default function Chat({ messages, username, onSend, onClose }: Props) {
                   {msg.username}
                 </span>
                 <span className="break-words leading-snug text-slate-200">{msg.text}</span>
-                <span className="text-[10px] text-white/20 self-end">
+                <span className="text-xs text-white/20 self-end">
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -79,7 +79,7 @@ export default function Chat({ messages, username, onSend, onClose }: Props) {
           placeholder="Type a message..."
         />
         <button
-          className="bg-rose-500 hover:bg-rose-600 text-white text-sm px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
+          className="bg-rose-500 hover:bg-rose-600 active:scale-[0.97] text-white text-sm px-3 py-2 rounded-lg transition-all whitespace-nowrap"
           onClick={send}
         >
           Send

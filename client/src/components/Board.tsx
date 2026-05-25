@@ -370,7 +370,7 @@ export default function Board({ board, username, initialCard, onLeave }: Props) 
               })()}
               {activeColumn && (
                 <div className="bg-[#171929] border border-white/[0.06] rounded-xl p-3 min-w-[260px] opacity-90">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-white/40 px-1">
                     {activeColumn.title}
                   </h3>
                 </div>
@@ -440,7 +440,7 @@ function Column({ column, onAddCard, onDeleteCard, onSelectCard }: {
       className="bg-[#171929] border border-white/[0.06] rounded-xl p-3 min-w-[240px] max-w-[240px] sm:min-w-[260px] sm:max-w-[260px] flex flex-col gap-2 max-h-[calc(100vh-110px)]"
     >
       <h3
-        className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-1 cursor-grab active:cursor-grabbing select-none"
+        className="text-xs font-bold uppercase tracking-widest text-white/40 px-1 cursor-grab active:cursor-grabbing select-none"
         {...attributes}
         {...listeners}
       >
@@ -476,7 +476,7 @@ function Column({ column, onAddCard, onDeleteCard, onSelectCard }: {
           placeholder="Add a card..."
         />
         <button
-          className="bg-rose-500 hover:bg-rose-600 text-white text-base px-2 py-1 rounded-lg transition-colors leading-none"
+          className="bg-rose-500 hover:bg-rose-600 active:scale-[0.95] text-white text-base px-2 py-1 rounded-lg transition-all leading-none"
           onClick={submit}
         >
           +
@@ -538,7 +538,7 @@ function SortableCard({ card, columnId, onDelete, onSelect }: {
           <span className="text-[11px] font-semibold text-white/40">@{card.assignedTo}</span>
         )}
         {due && (
-          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded self-start mt-0.5 ${due.className}`}>
+          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded self-start mt-0.5 ${due.className}`}>
             {due.label}
           </span>
         )}

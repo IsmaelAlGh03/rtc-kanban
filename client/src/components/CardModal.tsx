@@ -211,7 +211,7 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
           <h3 className="text-[11px] font-bold uppercase tracking-widest text-white/35 flex items-center gap-2 shrink-0">
             Comments
             {card.comments.length > 0 && (
-              <span className="bg-white/[0.08] text-white/40 text-[10px] rounded-full px-2 py-0.5">
+              <span className="bg-indigo-500/15 text-indigo-400 text-xs rounded-full px-2 py-0.5">
                 {card.comments.length}
               </span>
             )}
@@ -230,7 +230,7 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
                   <span className={`text-[11px] font-bold ${c.username === username ? 'text-rose-400' : 'text-white/40'}`}>
                     {c.username}
                   </span>
-                  <span className="text-[10px] text-white/20 whitespace-nowrap">
+                  <span className="text-xs text-white/20 whitespace-nowrap">
                     {new Date(c.timestamp).toLocaleString([], {
                       month: 'short', day: 'numeric',
                       hour: '2-digit', minute: '2-digit',
@@ -287,7 +287,7 @@ export default function CardModal({ card, username, members, onClose, onUpdate, 
             </div>
             <div className="flex justify-end">
               <button
-                className="bg-rose-500 hover:bg-rose-600 text-white text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                className="bg-rose-500 hover:bg-rose-600 active:scale-[0.97] text-white text-sm px-4 py-2 rounded-lg transition-all whitespace-nowrap"
                 onClick={submitComment}
               >
                 Post
