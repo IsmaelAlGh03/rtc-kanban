@@ -494,9 +494,16 @@ function dueDateLabel(dueDate: string): { label: string; className: string } {
   due.setHours(0, 0, 0, 0);
   const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
   const label = due.toLocaleDateString([], { month: 'short', day: 'numeric' });
-  if (diff < 0) return { label, className: 'bg-rose-500/15 text-rose-400' };
-  if (diff === 0) return { label: 'Today', className: 'bg-amber-500/15 text-amber-400' };
-  return { label, className: 'bg-white/[0.08] text-white/35' };
+
+  if (diff === 0) return { label: 'Today',    className: 'bg-amber-500/15 text-amber-400' };
+  if (diff === 1) return { label: 'Tomorrow', className: 'bg-amber-500/10 text-amber-400/70' };
+  if (diff  >  1) return { label,             className: 'bg-white/[0.08] text-white/35' };
+
+  const daysLate = Math.abs(diff);
+  if (daysLate === 1) return { label, className: 'bg-rose-500/15 text-rose-400' };
+  if (daysLate <=  3) return { label, className: 'bg-rose-500/25 text-rose-400' };
+  if (daysLate <=  6) return { label, className: 'bg-rose-500/40 text-rose-300' };
+  return                     { label, className: 'bg-rose-500/60 text-rose-200 ring-1 ring-rose-500/50' };
 }
 
 const DONE_STRIP = { color: '#2e3150', bg: '#181b2a', shadow: 'none' };
