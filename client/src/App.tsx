@@ -223,7 +223,7 @@ export default function App() {
       <Routes>
         <Route path="*" element={
       <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-[#0d0f1a] px-4">
-        <h1 className="text-4xl font-bold text-slate-100">RTC Kanban</h1>
+        <h1 className="text-4xl font-bold text-slate-100">Kayro</h1>
 
         <div className="bg-[#1a1d30] border border-white/[0.07] rounded-2xl shadow-xl w-full max-w-sm p-8 flex flex-col gap-5">
           <div className="flex rounded-lg overflow-hidden border border-white/[0.09]">

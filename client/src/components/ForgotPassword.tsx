@@ -40,7 +40,7 @@ export default function ForgotPassword() {
 
   return (
     <div className={pageCls}>
-      <h1 className="text-4xl font-bold text-slate-100">RTC Kanban</h1>
+      <h1 className="text-4xl font-bold text-slate-100">Kayro</h1>
       <div className={cardCls}>
         <div>
           <h2 className="text-lg font-semibold text-slate-100">Reset your password</h2>

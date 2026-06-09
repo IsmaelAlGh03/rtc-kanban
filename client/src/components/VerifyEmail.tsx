@@ -42,7 +42,7 @@ export default function VerifyEmail({ onVerified }: Props) {
 
   return (
     <div className={pageCls}>
-      <h1 className="text-4xl font-bold text-slate-100">RTC Kanban</h1>
+      <h1 className="text-4xl font-bold text-slate-100">Kayro</h1>
       <div className={cardCls}>
         {status === 'loading' && (
           <>

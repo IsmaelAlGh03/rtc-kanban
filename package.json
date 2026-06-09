@@ -1,5 +1,5 @@
 {
-  "name": "rtc-kanban",
+  "name": "kayro",
   "version": "1.0.0",
   "description": "Real-time Kanban board with Socket.io",
   "scripts": {

@@ -14,7 +14,7 @@ export function ConfirmEmail({ username, confirmUrl }: ConfirmEmailProps) {
         Confirm your email address
       </Text>
       <Text style={{ fontSize: '13px', color: '#78716c', lineHeight: '1.6', margin: '0 0 20px' }}>
-        Hi {username} — thanks for signing up for RTC Kanban. Tap below to confirm your address and start organizing.
+        Hi {username} — thanks for signing up for Kayro. Tap below to confirm your address and start organizing.
       </Text>
       <Button
         href={confirmUrl}

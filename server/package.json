@@ -1,5 +1,5 @@
 {
-  "name": "rtc-kanban-server",
+  "name": "kayro-server",
   "version": "1.0.0",
   "description": "Real-time Kanban board server",
   "main": "dist/index.js",

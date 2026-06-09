@@ -19,7 +19,7 @@ registerSocketHandlers(io);
 initNotificationService(io);
 
 const PORT = process.env.PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/rtc-kanban';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/kayro';
 
 connectDB(MONGO_URI)
   .then(() => {

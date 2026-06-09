@@ -24,7 +24,7 @@ async function sendEmail(to: string, subject: string, element: React.ReactElemen
 export async function sendConfirmationEmail(to: string, username: string, token: string): Promise<void> {
   await sendEmail(
     to,
-    'Confirm your email — RTC Kanban',
+    'Confirm your email — Kayro',
     <ConfirmEmail username={username} confirmUrl={`${APP_URL}/verify-email?token=${token}`} />
   );
 }
@@ -32,7 +32,7 @@ export async function sendConfirmationEmail(to: string, username: string, token:
 export async function sendPasswordResetEmail(to: string, username: string, token: string): Promise<void> {
   await sendEmail(
     to,
-    'Reset your password — RTC Kanban',
+    'Reset your password — Kayro',
     <PasswordReset username={username} resetUrl={`${APP_URL}/reset-password?token=${token}`} />
   );
 }

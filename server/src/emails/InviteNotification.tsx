@@ -21,7 +21,7 @@ export function InviteNotification({ fromUsername, boardTitle, appUrl }: InviteN
         href={appUrl}
         style={{ backgroundColor: '#2563eb', color: 'white', padding: '11px 24px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', display: 'block', textAlign: 'center', textDecoration: 'none' }}
       >
-        Open RTC Kanban →
+        Open Kayro →
       </Button>
     </Layout>
   );

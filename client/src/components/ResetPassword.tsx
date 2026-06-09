@@ -56,7 +56,7 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <div className={pageCls}>
-        <h1 className="text-4xl font-bold text-slate-100">RTC Kanban</h1>
+        <h1 className="text-4xl font-bold text-slate-100">Kayro</h1>
         <div className={cardCls + ' items-center text-center'}>
           <p className="text-sm text-rose-300">No reset token found in the link.</p>
           <a href="/" className="text-sm text-rose-400 hover:underline">Back to login</a>

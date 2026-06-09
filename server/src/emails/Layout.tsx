@@ -32,7 +32,7 @@ export function Layout({ children }: LayoutProps) {
             </Section>
             <Section style={{ backgroundColor: '#fafaf9', padding: '12px 24px', borderTop: '1px solid #e7e5e4', borderRadius: '0 0 10px 10px' }}>
               <Text style={{ fontSize: '11px', color: '#a8a29e', margin: '0' }}>
-                RTC Kanban · If you didn't request this, you can safely ignore this email.
+                Kayro · If you didn't request this, you can safely ignore this email.
               </Text>
             </Section>
           </Section>
