@@ -5,7 +5,7 @@ let _socket: Socket | null = null;
 export function getSocket(): Socket {
   if (!_socket) {
     const token = localStorage.getItem('rtc-token') ?? '';
-    _socket = io('http://localhost:4000', { auth: { token } });
+    _socket = io(import.meta.env.VITE_SERVER_URL ?? 'http://localhost:4000', { auth: { token } });
   }
   return _socket;
 }

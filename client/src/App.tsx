@@ -12,8 +12,7 @@ import ProfilePage from './components/ProfilePage';
 import { resetSocket } from './socket';
 import { toast } from 'sonner';
 import { gravatarUrl } from './utils/gravatar';
-
-const API = 'http://localhost:4000/api';
+import { API } from './api';
 
 function isColorLight(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16);

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { INotification } from '../types';
 import { getSocket } from '../socket';
-
-const API = 'http://localhost:4000/api';
+import { API } from '../api';
 
 function authHeaders() {
   return {

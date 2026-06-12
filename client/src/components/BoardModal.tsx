@@ -6,7 +6,7 @@ const PALETTE = [
   '#fca5a5', '#fdba74', '#fde68a', '#86efac', '#67e8f9', '#a5b4fc', '#f9a8d4', '#c4b5fd',
 ];
 
-const API = 'http://localhost:4000/api';
+import { API } from '../api';
 
 function authHeaders() {
   return {

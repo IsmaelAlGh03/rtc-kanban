@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { gravatarUrl } from '../utils/gravatar';
-
-const API = 'http://localhost:4000/api';
+import { API } from '../api';
 
 interface Props {
   username: string;

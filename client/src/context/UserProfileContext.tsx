@@ -1,6 +1,5 @@
 import { createContext, useContext, useRef, useState, ReactNode } from 'react';
-
-const API = 'http://localhost:4000/api';
+import { API } from '../api';
 
 export interface UserProfile {
   username: string;

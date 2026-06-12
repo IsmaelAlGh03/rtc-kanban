@@ -1,6 +1,5 @@
 import { useState } from 'react';
-
-const API = 'http://localhost:4000/api';
+import { API } from '../api';
 
 interface Props {
   token: string;
