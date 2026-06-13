@@ -8,7 +8,7 @@ import { InviteNotification } from '../emails/InviteNotification';
 import { MentionNotification } from '../emails/MentionNotification';
 import { AssignedNotification } from '../emails/AssignedNotification';
 
-const FROM = 'onboarding@resend.dev';
+const FROM = 'noreply@kayro.dev';
 
 async function sendEmail(to: string, subject: string, element: React.ReactElement): Promise<void> {
   if (!RESEND_API_KEY) return;
