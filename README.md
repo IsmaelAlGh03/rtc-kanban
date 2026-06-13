@@ -1,6 +1,8 @@
-# RTC Kanban
+# Kayro
 
-A real-time Kanban board built to put my experience with WebSockets and live data sync to use in a full-stack project. Move a card, add a column, drop a comment — everyone in the same board sees it instantly, no refresh needed.
+Real-time collaborative kanban boards. Built this because I wanted something simple I could hand to a teammate and have them up in under a minute. Not Jira, not a spreadsheet, just a board that works.
+
+**[kayro.dev](https://kayro.dev)**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
@@ -11,16 +13,19 @@ A real-time Kanban board built to put my experience with WebSockets and live dat
 
 ## What it does
 
-- **Real-time updates** — any change is pushed to all connected users immediately via Socket.io
-- **Auth** — register/login with JWT tokens and bcrypt-hashed passwords; you can use your username or email to log in
-- **Boards** — create and delete boards; each one runs in its own Socket.io room
-- **Columns & cards** — add, move, and delete cards across columns; add and delete columns
-- **Card details** — assign cards to people, set an urgency level, and leave comments
-- **Live chat** — a simple chat that's active while you're in the board
+When someone moves a card or drops a comment, it shows up for everyone on that board right away. No refresh, no polling. WebSockets.
+
+- Create boards, add columns, drag cards between them
+- Invite teammates by username or share a link
+- Cards have descriptions, due dates, urgency levels, and assignees
+- Comment on cards with @mentions
+- Chat sidebar inside every board
+- Email notifications for assignments, mentions, and board invites
+- Signup, email verification, forgot password, account deletion
 
 ## How the real-time part works
 
-When an action is performed (moving a card, adding a column, etc.), the client sends a Socket.io event to the server. The server updates the board in MongoDB, then broadcasts the full updated board back to everyone in the room. No merging on the client side — everyone just gets the latest version.
+Client sends a Socket.io event, server writes to MongoDB and broadcasts the full updated board back to everyone in the room. No client-side merging — everyone just gets the latest state.
 
 ```
 Client A                  Server                  Client B
@@ -30,12 +35,47 @@ Client A                  Server                  Client B
    │◄─ board:updated ─────│                           │
 ```
 
-## Tech Stack
+## Stack
 
-| Layer    | Technology                               |
-| -------- | ---------------------------------------- |
-| Frontend | React 18, TypeScript, Tailwind CSS, Vite |
-| Backend  | Node.js, Express, TypeScript             |
-| Realtime | Socket.io                                |
-| Database | MongoDB (Atlas), raw driver (no ODM)     |
-| Auth     | JWT, bcryptjs                            |
+**Frontend:** React, Vite, Tailwind, dnd-kit, Socket.IO client
+
+**Backend:** Node/Express, Socket.IO, MongoDB (raw driver, no ORM)
+
+**Email:** Resend + React Email
+
+**Deployed:** Vercel + Render + MongoDB Atlas
+
+## Running it locally
+
+You need Node 18+ and MongoDB running somewhere.
+
+```bash
+git clone https://github.com/IsmaelAlGh03/rtc-kanban.git
+cd rtc-kanban
+npm install
+cd server && npm install
+cd ../client && npm install && cd ..
+```
+
+Create `server/.env`:
+
+```
+PORT=4000
+MONGO_URI=mongodb://localhost:27017/kayro
+CLIENT_URL=http://localhost:5173
+JWT_SECRET=something_long_and_random
+APP_URL=http://localhost:5173
+RESEND_API_KEY=     # optional, emails just won't send without it
+```
+
+```bash
+npm run dev
+```
+
+Server on `localhost:4000`, client on `localhost:5173`.
+
+## Tests
+
+```bash
+cd server && npm test
+```
