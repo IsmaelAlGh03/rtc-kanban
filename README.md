@@ -11,6 +11,8 @@ Real-time collaborative kanban boards. Built this because I wanted something sim
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
 
+![Kayro demo](docs\kayro-demo-video.gif)
+
 ## What it does
 
 When someone moves a card or drops a comment, it shows up for everyone on that board right away. No refresh, no polling. WebSockets.
@@ -34,6 +36,14 @@ Client A                  Server                  Client B
    │                      │── board:updated ──────────►│
    │◄─ board:updated ─────│                           │
 ```
+
+## Under the hood
+
+A few things I cared about beyond "it works":
+
+- **Auth is checked on every action, not just at login.** The JWT is verified on the Socket.io handshake, and every single socket event re-checks that you're actually a member of that board before it touches the database — the REST routes aren't the only gate.
+- **Everything user-typed is sanitized** (`sanitize-html`) before it's stored, and the auth endpoints are rate-limited (`express-rate-limit`).
+- **Integration tests, not just unit.** The Jest suites run against an in-memory MongoDB (`mongodb-memory-server`) and cover auth, boards, notifications, the email flows, and the socket handlers — so they exercise the real request/response and DB paths.
 
 ## Stack
 
