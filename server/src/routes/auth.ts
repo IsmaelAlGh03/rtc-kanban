@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { ObjectId } from 'mongodb';
 import { IBoard } from '../models/Board';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -22,6 +23,13 @@ const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
   message: { error: 'Too many registration attempts, please try again later.' },
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const guestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  message: { error: 'Too many guest sessions, please try again later.' },
   skip: () => process.env.NODE_ENV === 'test',
 });
 
@@ -124,6 +132,82 @@ router.post('/login', loginLimiter, async (req: Request, res: Response): Promise
   res.json({ token, username: user.username });
 });
 
+router.post('/guest', guestLimiter, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const users = getDB().collection('users');
+
+    // Generate a unique guest username, retrying on the rare collision.
+    let name = '';
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = `guest-${crypto.randomBytes(4).toString('hex')}`;
+      if (!(await users.findOne({ username: candidate }))) {
+        name = candidate;
+        break;
+      }
+    }
+    if (!name) {
+      res.status(500).json({ error: 'Could not create a guest session, please try again' });
+      return;
+    }
+
+    const placeholderEmail = `${name}@guest.kayro.local`;
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+    const gravatarHash = crypto.createHash('md5').update(placeholderEmail).digest('hex');
+
+    await users.insertOne({
+      username: name,
+      email: placeholderEmail,
+      passwordHash,
+      gravatarHash,
+      guest: true,
+      emailVerified: true,
+      createdAt: new Date(),
+    });
+
+    // Seed a starter board so the guest lands on something to play with.
+    const now = new Date();
+    const todo = new ObjectId().toString();
+    const inProgress = new ObjectId().toString();
+    const done = new ObjectId().toString();
+    const starterBoard: IBoard = {
+      title: 'Welcome to Kayro 👋',
+      description: 'A demo board — drag cards, add comments, and try everything out.',
+      owner: name,
+      members: [],
+      pendingInvites: [],
+      columns: [
+        {
+          _id: todo,
+          title: 'To Do',
+          order: 0,
+          cards: [
+            { _id: new ObjectId().toString(), title: 'Drag me to another column', order: 0, addedBy: name, urgency: 'medium', comments: [] },
+            { _id: new ObjectId().toString(), title: 'Click me to add a comment', order: 1, addedBy: name, urgency: 'low', comments: [] },
+          ],
+        },
+        {
+          _id: inProgress,
+          title: 'In Progress',
+          order: 1,
+          cards: [
+            { _id: new ObjectId().toString(), title: 'Add your own cards with the + button', order: 0, addedBy: name, urgency: 'low', comments: [] },
+          ],
+        },
+        { _id: done, title: 'Done', order: 2, cards: [] },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+    await getDB().collection<IBoard>('boards').insertOne(starterBoard as any);
+
+    const token = jwt.sign({ username: name }, JWT_SECRET, { expiresIn: '7d' });
+    res.status(201).json({ token, username: name });
+  } catch (err) {
+    console.error('Failed to create guest session:', err);
+    res.status(500).json({ error: 'Could not create a guest session, please try again' });
+  }
+});
+
 router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   const user = await getDB().collection('users').findOne({ username: req.username });
   if (!user) { res.status(404).json({ error: 'User not found' }); return; }
@@ -133,6 +217,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
     displayName: user.displayName ?? user.username,
     bio: user.bio ?? '',
     gravatarHash: user.gravatarHash ?? '',
+    guest: user.guest ?? false,
   });
 });
 

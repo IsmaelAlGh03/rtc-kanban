@@ -31,7 +31,7 @@ export async function createNotification(data: Omit<INotification, '_id' | 'read
   _io?.to(data.userId).emit('notification:new', inserted);
 
   const user = await getDB().collection('users').findOne({ username: data.userId });
-  if (user?.email) {
+  if (user?.email && !user.guest) {
     if (data.type === 'invite') {
       sendInviteEmail(user.email, data.fromUsername, data.boardTitle).catch(err =>
         console.error('invite email error:', err)
