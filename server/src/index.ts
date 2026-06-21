@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { connectDB } from './db';
 import { registerSocketHandlers } from './socket/handlers';
 import { initNotificationService } from './services/notifications';
+import { startGuestCleanup } from './services/guestCleanup';
 import app from './app';
 
 const httpServer = createServer(app);
@@ -23,6 +24,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/kayro';
 
 connectDB(MONGO_URI)
   .then(() => {
+    startGuestCleanup();
     httpServer.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });

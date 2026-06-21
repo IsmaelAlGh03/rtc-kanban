@@ -25,14 +25,16 @@ function isLight(hex: string) {
 interface Props {
   board: IBoard;
   username: string;
+  isGuest?: boolean;
   onClose: () => void;
   onSave: (updated: Pick<IBoard, 'title' | 'description' | 'color'>) => Promise<void>;
   onDelete: () => Promise<void>;
   onMembersChange: (members: string[]) => void;
 }
 
-export default function BoardModal({ board, username, onClose, onSave, onDelete, onMembersChange }: Props) {
+export default function BoardModal({ board, username, isGuest = false, onClose, onSave, onDelete, onMembersChange }: Props) {
   const isOwner = board.owner === username;
+  const canShare = isOwner && !isGuest;
 
   const [title, setTitle] = useState(board.title);
   const [description, setDescription] = useState(board.description ?? '');
@@ -185,7 +187,7 @@ export default function BoardModal({ board, username, onClose, onSave, onDelete,
         </div>
 
         {/* Share */}
-        {isOwner && (
+        {canShare && (
           <div className="flex flex-col gap-3 border-t border-white/[0.07] pt-4">
             <label className="text-xs font-semibold text-white/40 uppercase tracking-wide">Share</label>
 

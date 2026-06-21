@@ -21,6 +21,11 @@ function hasAccess(board: IBoard, username: string) {
   return board.owner === username || board.members.includes(username);
 }
 
+async function isGuest(username: string): Promise<boolean> {
+  const user = await getDB().collection('users').findOne({ username });
+  return user?.guest === true;
+}
+
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const username = req.username!;
@@ -125,6 +130,7 @@ router.post('/:id/invite', async (req: AuthRequest, res: Response) => {
     const board = await boards().findOne({ _id: new ObjectId(req.params.id as string) as any });
     if (!board) return res.status(404).json({ error: 'Board not found' });
     if (!isOwner(board, req.username!)) return res.status(403).json({ error: 'Only the owner can manage sharing' });
+    if (await isGuest(req.username!)) return res.status(403).json({ error: 'Guests cannot share boards' });
 
     const token = crypto.randomBytes(16).toString('hex');
     await boards().updateOne({ _id: board._id as any }, { $set: { inviteToken: token } });
@@ -139,6 +145,7 @@ router.patch('/:id/members', async (req: AuthRequest, res: Response) => {
     const board = await boards().findOne({ _id: new ObjectId(req.params.id as string) as any });
     if (!board) return res.status(404).json({ error: 'Board not found' });
     if (!isOwner(board, req.username!)) return res.status(403).json({ error: 'Only the owner can manage sharing' });
+    if (await isGuest(req.username!)) return res.status(403).json({ error: 'Guests cannot invite members' });
 
     const { username } = req.body;
     if (!username || typeof username !== 'string') return res.status(400).json({ error: 'username is required' });

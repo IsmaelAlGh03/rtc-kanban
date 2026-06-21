@@ -35,6 +35,7 @@ export default function App() {
   const [bio, setBio] = useState<string>('');
   const [showProfile, setShowProfile] = useState(false);
   const [emailVerified, setEmailVerified] = useState<boolean>(true);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [currentBoard, setCurrentBoard] = useState<IBoard | null>(null);
   const [newBoardTitle, setNewBoardTitle] = useState('');
@@ -73,6 +74,7 @@ export default function App() {
           setDisplayName(data.displayName ?? username);
           setGravatarHash(data.gravatarHash ?? '');
           setBio(data.bio ?? '');
+          setIsGuest(data.guest ?? false);
         }
       })
       .catch(() => {});
@@ -136,6 +138,30 @@ export default function App() {
     }
   }
 
+  async function enterAsGuest() {
+    setAuthError('');
+    setAuthSuccess('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/guest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAuthError(data.error ?? 'Could not start a guest session');
+        return;
+      }
+      localStorage.setItem('rtc-token', data.token);
+      localStorage.setItem('rtc-username', data.username);
+      setUsername(data.username);
+    } catch {
+      setAuthError('Could not connect to the server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function logout() {
     localStorage.removeItem('rtc-token');
     localStorage.removeItem('rtc-username');
@@ -145,8 +171,14 @@ export default function App() {
     setGravatarHash('');
     setBio('');
     setEmailVerified(true);
+    setIsGuest(false);
     setCurrentBoard(null);
     setBoards([]);
+  }
+
+  function convertToAccount() {
+    setMode('register');
+    logout();
   }
 
   async function fetchBoards() {
@@ -320,6 +352,24 @@ export default function App() {
               </a>
             )}
           </form>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-xs text-white/25">or</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <button
+              type="button"
+              onClick={enterAsGuest}
+              disabled={loading}
+              className="border border-white/10 text-white/60 hover:bg-white/[0.05] active:scale-[0.98] disabled:opacity-60 font-semibold text-sm py-2.5 rounded-lg transition-all"
+            >
+              Enter as guest
+            </button>
+            <p className="text-xs text-white/25 text-center">Try everything — no account needed.</p>
+          </div>
         </div>
       </div>
         } />
@@ -436,20 +486,36 @@ export default function App() {
             </span>
           </button>
           <NotificationTray onBoardsChange={fetchBoards} onNavigateToCard={navigateToCard} />
-          <button
-            onClick={() => { setShowDeleteAccount(true); setDeleteConfirmInput(''); }}
-            className="text-sm px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
-          >
-            Delete account
-          </button>
+          {!isGuest && (
+            <button
+              onClick={() => { setShowDeleteAccount(true); setDeleteConfirmInput(''); }}
+              className="text-sm px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
+            >
+              Delete account
+            </button>
+          )}
           <button
             onClick={logout}
             className="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:bg-white/[0.05] transition-colors"
           >
-            Logout
+            {isGuest ? 'Exit' : 'Logout'}
           </button>
         </div>
       </div>
+
+      {isGuest && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-amber-500/10 border border-amber-500/25 rounded-xl px-4 py-3">
+          <p className="text-sm text-amber-200/90">
+            You're in <strong>demo mode</strong>. Your boards are temporary and will be cleared after a few days.
+          </p>
+          <button
+            onClick={convertToAccount}
+            className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-[0.97] text-[#0d0f1a] transition-all whitespace-nowrap"
+          >
+            Create an account
+          </button>
+        </div>
+      )}
 
       <section className="mb-8">
         <h2 className="text-sm font-semibold text-white/30 uppercase tracking-wide mb-3">My Boards</h2>
@@ -491,6 +557,7 @@ export default function App() {
         <BoardModal
           board={editingBoard}
           username={username}
+          isGuest={isGuest}
           onClose={() => setEditingBoard(null)}
           onSave={updates => saveBoard(editingBoard._id, updates)}
           onDelete={() => deleteBoard(editingBoard._id)}
