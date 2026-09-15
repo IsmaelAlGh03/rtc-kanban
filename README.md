@@ -55,6 +55,8 @@ A few things I cared about beyond "it works":
 
 **Deployed:** Vercel + Render + MongoDB Atlas
 
+The server exposes `GET /health` (unauthenticated, pings Mongo). An external uptime monitor hits it every few minutes so the free Render instance never cold-starts for visitors.
+
 ## Running it locally
 
 You need Node 18+ and MongoDB running somewhere.
