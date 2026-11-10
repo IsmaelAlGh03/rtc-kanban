@@ -12,13 +12,19 @@ app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
 
 // Unauthenticated liveness check, hit by an external uptime monitor to keep the Render instance warm.
+// Always 200 while the process is up so a transient DB blip can't fail the pinger (cron-job.org
+// auto-disables jobs after repeated failures). DB state is reported in the body instead.
 app.get('/health', async (_req, res) => {
+  let dbStatus: 'ok' | 'down' = 'ok';
   try {
-    await getDB().command({ ping: 1 });
-    res.json({ status: 'ok' });
+    await Promise.race([
+      getDB().command({ ping: 1 }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('ping timeout')), 2000).unref()),
+    ]);
   } catch {
-    res.status(503).json({ status: 'error' });
+    dbStatus = 'down';
   }
+  res.json({ status: 'ok', db: dbStatus });
 });
 
 app.use('/api/auth', authRoutes);
